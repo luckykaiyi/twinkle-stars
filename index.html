@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>小宝子的打卡挑战</title>
+  <style>
+    :root {
+      --bg0: #dff0ff;
+      --bg1: #eef6ff;
+      --ink: #243a55;
+      --muted: #6b8199;
+      --card: rgba(255, 255, 255, 0.92);
+      --line: rgba(70, 130, 180, 0.14);
+      --teal: #4ea1ff;
+      --teal-deep: #2f7fe0;
+      --coral: #5eb0ff;
+      --sun: #ffe27a;
+      --ok: #4ea1ff;
+      --bad: #ff8fab;
+      --shadow: 0 14px 36px rgba(78, 161, 255, 0.16);
+      --radius: 26px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(900px 520px at 8% -8%, #b8e0ff 0%, transparent 58%),
+        radial-gradient(800px 480px at 100% 0%, #cfe8ff 0%, transparent 52%),
+        radial-gradient(600px 400px at 70% 100%, #ffe9f3 0%, transparent 45%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+    }
+    body {
+      padding: calc(16px + var(--safe-top)) 16px calc(24px + var(--safe-bottom));
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(2px);
+    }
+    body::before {
+      width: 120px;
+      height: 120px;
+      left: -20px;
+      top: 18%;
+      background: rgba(255, 255, 255, 0.55);
+      box-shadow: 40px 30px 0 rgba(255, 255, 255, 0.35);
+    }
+    body::after {
+      width: 90px;
+      height: 90px;
+      right: -10px;
+      bottom: 16%;
+      background: rgba(255, 255, 255, 0.45);
+      box-shadow: -28px 18px 0 rgba(190, 225, 255, 0.5);
+    }
+    .app {
+      position: relative;
+      z-index: 1;
+      width: min(920px, 100%);
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(1.25rem, 2.5vw, 1.6rem);
+      letter-spacing: 0.02em;
+    }
+    .brand p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .mode-switch {
+      display: inline-flex;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px;
+      box-shadow: var(--shadow);
+    }
+    .mode-switch button {
+      border: 0;
+      background: transparent;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .mode-switch button.active {
+      background: linear-gradient(180deg, #6bb2ff, #4ea1ff);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(78, 161, 255, 0.28);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      backdrop-filter: blur(8px);
+    }
+    .card + .card { margin-top: 14px; }
+
+    .hidden { display: none !important; }
+
+    .hero {
+      display: grid;
+      gap: 14px;
+    }
+    @media (min-width: 768px) {
+      .hero { grid-template-columns: 1.1fr 0.9fr; align-items: stretch; }
+    }
+
+    .reward-box {
+      background: linear-gradient(145deg, #ffffff 0%, #eaf5ff 55%, #f3f9ff 100%);
+      border-radius: 22px;
+      padding: 16px;
+      border: 2px dashed rgba(78, 161, 255, 0.4);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+    }
+    .reward-box .label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .reward-box .name {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #2f7fe0;
+      word-break: break-word;
+    }
+
+    .progress-ring-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 0;
+    }
+    .ring {
+      width: 150px;
+      height: 150px;
+      position: relative;
+    }
+    .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ring .bg { stroke: rgba(78, 161, 255, 0.16); }
+    .ring .fg {
+      stroke: var(--teal);
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.6s ease;
+      filter: drop-shadow(0 2px 6px rgba(78, 161, 255, 0.35));
+    }
+    .ring .center {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      transform: none;
+    }
+    .ring .center strong {
+      display: block;
+      font-size: 1.8rem;
+      line-height: 1.1;
+    }
+    .ring .center span {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .days {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+    @media (min-width: 600px) {
+      .days { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+    }
+    .day {
+      aspect-ratio: 1;
+      border-radius: 20px;
+      border: 2px solid var(--line);
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      position: relative;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .day .n {
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+    .day .d {
+      font-size: 0.62rem;
+      color: #8aa0b8;
+      line-height: 1.1;
+    }
+    .day .icon {
+      font-size: 1.45rem;
+      line-height: 1;
+      font-weight: 700;
+    }
+    .day .icon.star-off {
+      color: #c9d8ea;
+      text-shadow: none;
+      filter: none;
+    }
+    .day .icon.star-on {
+      color: #ffd000;
+      -webkit-text-fill-color: #ffd000;
+      filter: drop-shadow(0 0 3px #fff6a0) drop-shadow(0 0 8px rgba(255, 208, 0, 1)) drop-shadow(0 0 14px rgba(255, 180, 0, 0.85));
+      text-shadow: 0 1px 0 #e6a800;
+    }
+    .day .icon.star-fail {
+      color: #ff8fab;
+      font-size: 1.2rem;
+      -webkit-text-fill-color: #ff8fab;
+      filter: none;
+    }
+    .day.todo {
+      opacity: 0.92;
+      background: linear-gradient(160deg, #f7fbff, #eef6ff);
+    }
+    .day.done {
+      background: linear-gradient(160deg, #fff8d6, #ffe9a8);
+      border-color: rgba(255, 196, 0, 0.65);
+      box-shadow: 0 6px 16px rgba(255, 196, 0, 0.28);
+    }
+    .day.fail {
+      background: linear-gradient(160deg, #fff0f5, #ffe4ec);
+      border-color: rgba(255, 143, 171, 0.45);
+    }
+    .day.today {
+      box-shadow: 0 0 0 3px rgba(78, 161, 255, 0.28);
+    }
+    .day.done.today {
+      box-shadow: 0 0 0 3px rgba(255, 196, 0, 0.4), 0 6px 16px rgba(255, 196, 0, 0.28);
+    }
+    .day.pop { animation: pop 0.45s ease; }
+    .day.parent-cell {
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .day.parent-cell:active { transform: scale(0.96); }
+    @keyframes pop {
+      0% { transform: scale(0.8); }
+      60% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shine {
+      0%, 100% { filter: drop-shadow(0 0 4px rgba(255, 210, 0, 0.9)) drop-shadow(0 0 10px rgba(255, 196, 0, 0.7)); }
+      50% { filter: drop-shadow(0 0 8px rgba(255, 230, 120, 1)) drop-shadow(0 0 16px rgba(255, 200, 0, 0.95)); }
+    }
+    .day.done .icon.star-on { animation: shine 1.8s ease-in-out infinite; }
+
+    .parent-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 0 12px;
+    }
+    .parent-toolbar .btn { flex: 1 1 140px; }
+
+    .status-banner {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(78, 161, 255, 0.12);
+      color: #2f7fe0;
+      font-size: 0.95rem;
+      line-height: 1.45;
+    }
+    .status-banner.warn {
+      background: rgba(255, 226, 122, 0.28);
+      color: #8a6a10;
+    }
+    .status-banner.win {
+      background: linear-gradient(120deg, rgba(78, 161, 255, 0.16), rgba(255, 226, 122, 0.28));
+      color: #2a6fc7;
+      font-weight: 600;
+    }
+
+    .btn {
+      appearance: none;
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary {
+      background: linear-gradient(180deg, #6bb2ff, #4ea1ff);
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(78, 161, 255, 0.32);
+    }
+    .btn-primary:hover { background: linear-gradient(180deg, #5aa8ff, #2f7fe0); }
+    .btn-secondary {
+      background: #fff;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+    .btn-danger { background: var(--bad); color: #fff; }
+    .btn-sun {
+      background: linear-gradient(180deg, #ffe99a, #ffd95c);
+      color: #6a5208;
+      box-shadow: 0 6px 14px rgba(255, 217, 92, 0.35);
+    }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .btn-row .btn { flex: 1 1 140px; }
+
+    label.field {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    label.field input, label.field textarea, label.field select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 1rem;
+      color: var(--ink);
+      background: #fff;
+      font-family: inherit;
+    }
+    label.field textarea { min-height: 72px; resize: vertical; }
+
+    .parent-days {
+      display: grid;
+      gap: 8px;
+    }
+    .hint {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.45;
+      margin: 0 0 12px;
+    }
+
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 30, 34, 0.45);
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      z-index: 50;
+    }
+    .modal {
+      width: min(420px, 100%);
+      background: #fff;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .modal h3 { margin: 0 0 8px; }
+    .modal p { margin: 0 0 14px; color: var(--muted); font-size: 0.9rem; }
+    .pin-dots {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 8px 0 14px;
+    }
+    .pin-dots i {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #dde4e6;
+      display: block;
+    }
+    .pin-dots i.on { background: var(--teal); }
+    .pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .pad button {
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 0;
+      font-size: 1.2rem;
+      background: #f4f7f8;
+      cursor: pointer;
+    }
+
+    .cert-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 30, 34, 0.55);
+      z-index: 60;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      overflow: auto;
+    }
+    .cert-panel {
+      width: min(520px, 100%);
+      display: grid;
+      gap: 12px;
+    }
+    #certCanvas {
+      width: 100%;
+      height: auto;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      background: #fff;
+    }
+    .confetti {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      z-index: 70;
+    }
+    .confetti i {
+      position: absolute;
+      top: -10px;
+      width: 8px;
+      height: 14px;
+      border-radius: 2px;
+      animation: fall linear forwards;
+    }
+    @keyframes fall {
+      to { transform: translateY(110vh) rotate(720deg); opacity: 0.2; }
+    }
+
+    .empty {
+      text-align: center;
+      padding: 28px 12px;
+      color: var(--muted);
+    }
+    .empty strong { color: var(--ink); display: block; margin-bottom: 6px; font-size: 1.05rem; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand">
+        <h1>小宝子的打卡挑战 ☁️</h1>
+        <p id="subtitle">一点点完成，金星会发光哦</p>
+      </div>
+      <div class="mode-switch" role="tablist">
+        <button type="button" id="btnChild" class="active">宝宝</button>
+        <button type="button" id="btnParent">家长</button>
+      </div>
+    </div>
+
+    <!-- 儿童界面 -->
+    <section id="childView">
+      <div class="card hero" id="childContent">
+        <div>
+          <div class="reward-box">
+            <div class="label">目标奖励</div>
+            <div class="name" id="childReward">—</div>
+          </div>
+          <div class="status-banner" id="childBanner">先在家长页发布任务吧</div>
+          <div class="btn-row" id="childActions"></div>
+        </div>
+        <div class="progress-ring-wrap">
+          <div class="ring" aria-hidden="true">
+            <svg viewBox="0 0 120 120">
+              <circle class="bg" cx="60" cy="60" r="52" fill="none" stroke-width="10" />
+              <circle class="fg" id="ringFg" cx="60" cy="60" r="52" fill="none" stroke-width="10"
+                stroke-dasharray="326.73" stroke-dashoffset="326.73" />
+            </svg>
+            <div class="center">
+              <div>
+                <strong id="streakNum">0</strong>
+                <span>/ <span id="goalNum">10</span> 天</span>
+              </div>
+            </div>
+          </div>
+          <div style="color:var(--muted);font-size:0.85rem;">当前连续完成</div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <strong>金星进度</strong>
+          <span style="color:var(--muted);font-size:0.82rem;" id="rangeText"></span>
+        </div>
+        <div class="days" id="childDays"></div>
+      </div>
+    </section>
+
+    <!-- 家长界面 -->
+    <section id="parentView" class="hidden">
+      <div class="card">
+        <strong style="display:block;margin-bottom:8px;">任务设置</strong>
+        <p class="hint">设置宝宝的连续打卡任务：未完成的天数不计入连续；任务内容写在名称里（如：夜间不尿床挑战）。</p>
+        <label class="field">任务名称
+          <input id="taskTitle" type="text" maxlength="40" placeholder="例如：夜间不尿床挑战" />
+        </label>
+        <label class="field">奖励名称
+          <input id="rewardName" type="text" maxlength="40" placeholder="例如：心仪的玩具" />
+        </label>
+        <label class="field">开始日期
+          <input id="startDate" type="date" />
+        </label>
+        <label class="field">连续天数
+          <input id="goalDays" type="number" min="3" max="60" value="10" />
+        </label>
+        <p class="hint" id="rangePreview"></p>
+        <div class="btn-row">
+          <button type="button" class="btn btn-primary" id="saveTask">保存任务</button>
+          <button type="button" class="btn btn-secondary" id="resetAll">清空全部数据</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <strong style="display:block;margin-bottom:8px;">每日打卡</strong>
+        <p class="hint">点格子点亮金星＝当天完成；再点一下＝取消当格。全部清空请用「一键清除」。</p>
+        <div class="parent-toolbar">
+          <button type="button" class="btn btn-sun" id="fillAllOk">一键打满</button>
+          <button type="button" class="btn btn-secondary" id="clearAllMarks">一键清除</button>
+        </div>
+        <div class="days" id="parentDays"></div>
+      </div>
+
+      <div class="card">
+        <strong style="display:block;margin-bottom:8px;">家长设置</strong>
+        <label class="field">童锁 PIN（4 位数字，进入家长页需验证）
+          <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="默认 1234" />
+        </label>
+        <div class="btn-row">
+          <button type="button" class="btn btn-secondary" id="savePin">保存 PIN</button>
+          <button type="button" class="btn btn-sun" id="previewCert">预览奖状</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- PIN 弹窗 -->
+  <div class="modal-mask hidden" id="pinModal">
+    <div class="modal">
+      <h3>家长验证</h3>
+      <p>输入 4 位数字 PIN，才能进入家长界面。</p>
+      <div class="pin-dots" id="pinDots"><i></i><i></i><i></i><i></i></div>
+      <div class="pad" id="pinPad">
+        <button type="button" data-k="1">1</button>
+        <button type="button" data-k="2">2</button>
+        <button type="button" data-k="3">3</button>
+        <button type="button" data-k="4">4</button>
+        <button type="button" data-k="5">5</button>
+        <button type="button" data-k="6">6</button>
+        <button type="button" data-k="7">7</button>
+        <button type="button" data-k="8">8</button>
+        <button type="button" data-k="9">9</button>
+        <button type="button" data-k="cancel">取消</button>
+        <button type="button" data-k="0">0</button>
+        <button type="button" data-k="del">删除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 奖状 -->
+  <div class="cert-mask hidden" id="certModal">
+    <div class="cert-panel">
+      <canvas id="certCanvas" width="1080" height="1520"></canvas>
+      <div class="btn-row">
+        <button type="button" class="btn btn-primary" id="saveCert">保存图片到相册／下载</button>
+        <button type="button" class="btn btn-secondary" id="closeCert">关闭</button>
+      </div>
+      <p class="hint" style="color:#fff;text-align:center;">手机可长按图片或点保存后，在系统相册中查看。</p>
+    </div>
+  </div>
+
+  <div class="confetti hidden" id="confetti"></div>
+
+  <script>
+    const STORAGE_KEY = "night-potty-challenge-v1";
+    const CIRC = 2 * Math.PI * 52;
+
+    const defaultState = () => ({
+      pin: "1234",
+      task: null,
+      // task: { title, reward, startDate, goalDays, marks: { 'YYYY-MM-DD': 'ok'|'fail' }, completedAt }
+    });
+
+    let state = load();
+    let mode = "child";
+    let pinBuffer = "";
+    let parentUnlocked = false;
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return defaultState();
+        return { ...defaultState(), ...JSON.parse(raw) };
+      } catch {
+        return defaultState();
+      }
+    }
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function todayStr() {
+      const d = new Date();
+      return fmt(d);
+    }
+    function fmt(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+    function parseDate(s) {
+      const [y, m, d] = s.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+    function addDays(s, n) {
+      const d = parseDate(s);
+      d.setDate(d.getDate() + n);
+      return fmt(d);
+    }
+    function dateList(start, days) {
+      const list = [];
+      for (let i = 0; i < days; i++) list.push(addDays(start, i));
+      return list;
+    }
+    function weekday(s) {
+      return ["日", "一", "二", "三", "四", "五", "六"][parseDate(s).getDay()];
+    }
+
+    /** 当前连续成功天数：从今天或最后标记日往前数连续 ok */
+    function calcStreak(task) {
+      if (!task) return 0;
+      const marks = task.marks || {};
+      const keys = Object.keys(marks).filter((k) => marks[k] === "ok").sort();
+      if (!keys.length) return 0;
+
+      // 以「计划范围内已发生的日期」为准，从最近一个有记录的成功日往前连
+      let streak = 0;
+      let cursor = todayStr();
+      // 若今天还没打卡，从昨天开始往回数连续 ok
+      if (marks[cursor] !== "ok") {
+        cursor = addDays(cursor, -1);
+      }
+      // 最多回看 goalDays * 3，避免死循环
+      for (let i = 0; i < task.goalDays * 4; i++) {
+        if (marks[cursor] === "ok") {
+          streak += 1;
+          cursor = addDays(cursor, -1);
+        } else {
+          break;
+        }
+      }
+      return Math.min(streak, task.goalDays);
+    }
+
+    function plannedDates(task) {
+      if (!task) return [];
+      // 展示窗口：从 startDate 起，至少 goalDays；若有清零重来，继续向后延伸到覆盖今天
+      const start = task.startDate;
+      const endNeeded = todayStr() > addDays(start, task.goalDays - 1)
+        ? todayStr()
+        : addDays(start, task.goalDays - 1);
+      const days = Math.max(
+        task.goalDays,
+        Math.floor((parseDate(endNeeded) - parseDate(start)) / 86400000) + 1
+      );
+      return dateList(start, Math.min(days, task.goalDays + 60));
+    }
+
+    /** 儿童界面展示的 10（goal）个槽：当前这一轮要填满的格子 */
+    function currentRoundSlots(task) {
+      if (!task) return [];
+      const streak = calcStreak(task);
+      const marks = task.marks || {};
+      // 找当前这一轮的起点：最近一次 fail 之后的下一天；若无 fail，用 startDate
+      const fails = Object.keys(marks).filter((k) => marks[k] === "fail").sort();
+      let roundStart = task.startDate;
+      if (fails.length) {
+        roundStart = addDays(fails[fails.length - 1], 1);
+      }
+      // 若 roundStart 比 start 早，用 start
+      if (roundStart < task.startDate) roundStart = task.startDate;
+      return dateList(roundStart, task.goalDays).map((date, idx) => ({
+        date,
+        index: idx + 1,
+        status: marks[date] || (date < todayStr() ? "miss" : date === todayStr() ? "today" : "todo"),
+      }));
+    }
+
+    function checkComplete(task) {
+      if (!task) return false;
+      return calcStreak(task) >= task.goalDays;
+    }
+
+    function ensureCompleteFlag() {
+      const task = state.task;
+      if (!task) return;
+      if (checkComplete(task) && !task.completedAt) {
+        task.completedAt = new Date().toISOString();
+        save();
+        return true;
+      }
+      if (!checkComplete(task) && task.completedAt) {
+        task.completedAt = null;
+        save();
+      }
+      return false;
+    }
+
+    // ---------- render ----------
+    function render() {
+      const task = state.task;
+      document.getElementById("childView").classList.toggle("hidden", mode !== "child");
+      document.getElementById("parentView").classList.toggle("hidden", mode !== "parent");
+      document.getElementById("btnChild").classList.toggle("active", mode === "child");
+      document.getElementById("btnParent").classList.toggle("active", mode === "parent");
+
+      if (mode === "parent") renderParent();
+      renderChild();
+    }
+
+    function renderChild() {
+      const task = state.task;
+      const banner = document.getElementById("childBanner");
+      const actions = document.getElementById("childActions");
+      actions.innerHTML = "";
+
+      if (!task) {
+        document.getElementById("childReward").textContent = "还没有任务";
+        document.getElementById("streakNum").textContent = "0";
+        document.getElementById("goalNum").textContent = "10";
+        document.getElementById("rangeText").textContent = "";
+        document.getElementById("childDays").innerHTML = `<div class="empty" style="grid-column:1/-1"><strong>星星还在睡觉</strong>请先在家长页发布任务</div>`;
+        setRing(0, 10);
+        banner.className = "status-banner warn";
+        banner.textContent = "先切换到「家长」发布任务，再回来看进度哦。";
+        return;
+      }
+
+      const streak = calcStreak(task);
+      const slots = currentRoundSlots(task);
+      document.getElementById("childReward").textContent = task.reward || "神秘奖励";
+      document.getElementById("streakNum").textContent = String(streak);
+      document.getElementById("goalNum").textContent = String(task.goalDays);
+      document.getElementById("rangeText").textContent = `${task.title || "打卡挑战"} · 目标 ${task.goalDays} 天`;
+      setRing(streak, task.goalDays);
+
+      const daysEl = document.getElementById("childDays");
+      daysEl.innerHTML = "";
+      slots.forEach((slot) => {
+        daysEl.appendChild(buildDayCell(slot, task, false));
+      });
+
+      if (checkComplete(task)) {
+        banner.className = "status-banner win";
+        banner.textContent = `小宝子太厉害啦！「${task.title}」连续 ${task.goalDays} 天完成，可以兑换「${task.reward}」喽！`;
+        const b = document.createElement("button");
+        b.className = "btn btn-sun";
+        b.textContent = "查看奖状";
+        b.onclick = () => showCertificate(true);
+        actions.appendChild(b);
+      } else {
+        banner.className = "status-banner";
+        const left = task.goalDays - streak;
+        banner.textContent = streak === 0
+          ? `小宝子完成「${task.title}」就能点亮金星～连续 ${task.goalDays} 天可兑奖励哦。`
+          : `小宝子已经连续 ${streak} 天啦！再坚持 ${left} 天，金星就集齐咯！`;
+      }
+    }
+
+    function setRing(streak, goal) {
+      const fg = document.getElementById("ringFg");
+      const ratio = goal ? Math.min(streak / goal, 1) : 0;
+      fg.style.strokeDasharray = String(CIRC);
+      fg.style.strokeDashoffset = String(CIRC * (1 - ratio));
+    }
+
+    function renderParent() {
+      const task = state.task;
+      if (task) {
+        document.getElementById("taskTitle").value = task.title || "";
+        document.getElementById("rewardName").value = task.reward || "";
+        document.getElementById("startDate").value = task.startDate || "";
+        document.getElementById("goalDays").value = task.goalDays || 10;
+      } else if (!document.getElementById("startDate").value) {
+        document.getElementById("startDate").value = todayStr();
+      }
+      updateRangePreview();
+      renderParentDays();
+      document.getElementById("pinInput").value = "";
+      document.getElementById("pinInput").placeholder = `当前已设置（默认 1234）`;
+    }
+
+    function updateRangePreview() {
+      const start = document.getElementById("startDate").value;
+      const days = Number(document.getElementById("goalDays").value || 0);
+      const el = document.getElementById("rangePreview");
+      if (!start || !days) {
+        el.textContent = "选择开始日期和天数后，将自动计算首轮日期范围。";
+        return;
+      }
+      const end = addDays(start, days - 1);
+      el.textContent = `首轮计划：${start}（周${weekday(start)}）→ ${end}（周${weekday(end)}），共 ${days} 天。若中途未完成清零，将从下一天重新计算连续。`;
+    }
+
+    function shortDate(s) {
+      const d = parseDate(s);
+      return `${d.getMonth() + 1}/${d.getDate()}`;
+    }
+
+    function buildDayCell(slot, task, interactive) {
+      const mark = task.marks?.[slot.date];
+      const el = document.createElement("div");
+      el.className = "day";
+      if (interactive) el.classList.add("parent-cell");
+
+      let iconClass = "icon star-off";
+      let icon = "☆";
+      if (mark === "ok") {
+        el.classList.add("done");
+        iconClass = "icon star-on";
+        icon = "★";
+      } else if (mark === "fail") {
+        el.classList.add("fail");
+        iconClass = "icon star-fail";
+        icon = "✕";
+      } else {
+        el.classList.add("todo");
+      }
+      if (slot.date === todayStr()) el.classList.add("today");
+
+      el.innerHTML = `<span class="${iconClass}">${icon}</span><span class="n">第${slot.index}天</span><span class="d">${shortDate(slot.date)}</span>`;
+
+      if (interactive) {
+        el.title = `${slot.date} 周${weekday(slot.date)}（点击切换）`;
+        el.addEventListener("click", () => cycleMark(slot.date));
+      }
+      return el;
+    }
+
+    function cycleMark(date) {
+      if (!state.task) return;
+      if (!state.task.marks) state.task.marks = {};
+      const cur = state.task.marks[date];
+      // 点亮＝完成；再点＝取消当格（清除单格）
+      if (cur === "ok") delete state.task.marks[date];
+      else state.task.marks[date] = "ok";
+
+      const justWon = ensureCompleteFlag();
+      save();
+      render();
+      if (state.task.marks[date] === "ok") {
+        document.querySelectorAll("#parentDays .day.done").forEach((c) => {
+          if (c.querySelector(".d")?.textContent === shortDate(date)) c.classList.add("pop");
+        });
+      }
+      if (justWon) {
+        burstConfetti();
+        setTimeout(() => showCertificate(true), 350);
+      }
+    }
+
+    function renderParentDays() {
+      const wrap = document.getElementById("parentDays");
+      const task = state.task;
+      if (!task) {
+        wrap.innerHTML = `<div class="empty" style="grid-column:1/-1"><strong>还没有任务</strong>先填写上方信息并保存</div>`;
+        return;
+      }
+      const slots = currentRoundSlots(task);
+      wrap.innerHTML = "";
+      slots.forEach((slot) => {
+        wrap.appendChild(buildDayCell(slot, task, true));
+      });
+    }
+
+    function fillAllOk() {
+      const task = state.task;
+      if (!task) {
+        alert("请先保存任务");
+        return;
+      }
+      if (!confirm(`将当前这一轮 ${task.goalDays} 天全部点亮为「完成」？`)) return;
+      if (!task.marks) task.marks = {};
+      currentRoundSlots(task).forEach((slot) => {
+        task.marks[slot.date] = "ok";
+      });
+      const justWon = ensureCompleteFlag();
+      save();
+      render();
+      if (justWon) {
+        burstConfetti();
+        setTimeout(() => showCertificate(true), 350);
+      }
+    }
+
+    function clearAllMarks() {
+      const task = state.task;
+      if (!task) {
+        alert("请先保存任务");
+        return;
+      }
+      if (!confirm("清除当前任务的全部打卡标记？")) return;
+      task.marks = {};
+      task.completedAt = null;
+      save();
+      render();
+    }
+
+    // ---------- certificate ----------
+    function showCertificate(withConfetti) {
+      const task = state.task;
+      if (!task) return;
+      drawCertificate(task);
+      document.getElementById("certModal").classList.remove("hidden");
+      if (withConfetti) burstConfetti();
+    }
+
+    function drawCertificate(task) {
+      const canvas = document.getElementById("certCanvas");
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // background
+      const g = ctx.createLinearGradient(0, 0, w, h);
+      g.addColorStop(0, "#d9efff");
+      g.addColorStop(0.45, "#f2f8ff");
+      g.addColorStop(1, "#e7f3ff");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+
+      // soft bubbles
+      ctx.fillStyle = "rgba(255,255,255,0.55)";
+      ctx.beginPath(); ctx.arc(180, 260, 50, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(900, 400, 70, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(220, 1200, 60, 0, Math.PI * 2); ctx.fill();
+
+      // frame
+      ctx.strokeStyle = "#4ea1ff";
+      ctx.lineWidth = 14;
+      roundRect(ctx, 48, 48, w - 96, h - 96, 48);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255, 226, 122, 0.85)";
+      ctx.lineWidth = 5;
+      roundRect(ctx, 72, 72, w - 144, h - 144, 40);
+      ctx.stroke();
+
+      ctx.fillStyle = "#2f7fe0";
+      ctx.font = "bold 64px PingFang SC, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("荣誉奖状", w / 2, 220);
+
+      ctx.fillStyle = "#243a55";
+      ctx.font = "40px PingFang SC, sans-serif";
+      ctx.fillText("颁发给最棒的小宝子", w / 2, 320);
+
+      ctx.fillStyle = "#6b8199";
+      ctx.font = "34px PingFang SC, sans-serif";
+      wrapText(ctx, `完成「${task.title || "打卡挑战"}」`, w / 2, 420, w - 220, 52);
+      wrapText(ctx, `连续 ${task.goalDays} 天达成目标！`, w / 2, 520, w - 220, 52);
+
+      ctx.fillStyle = "#4ea1ff";
+      ctx.font = "bold 40px PingFang SC, sans-serif";
+      wrapText(ctx, `奖励：${task.reward || "神秘礼物"}`, w / 2, 680, w - 220, 56);
+
+      // stars
+      ctx.fillStyle = "#ffd95c";
+      ctx.font = "64px serif";
+      ctx.fillText("★ ★ ★ ★ ★", w / 2, 820);
+
+      ctx.fillStyle = "#6b8199";
+      ctx.font = "28px PingFang SC, sans-serif";
+      const when = task.completedAt ? new Date(task.completedAt) : new Date();
+      ctx.fillText(`日期：${fmt(when)}`, w / 2, 960);
+      ctx.fillText("爸爸妈妈为小宝子骄傲", w / 2, 1020);
+
+      ctx.fillStyle = "#2f7fe0";
+      ctx.font = "bold 32px PingFang SC, sans-serif";
+      ctx.fillText("小宝子最棒，继续加油！", w / 2, 1160);
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const chars = text.split("");
+      let line = "";
+      const lines = [];
+      for (let i = 0; i < chars.length; i++) {
+        const test = line + chars[i];
+        if (ctx.measureText(test).width > maxWidth && line) {
+          lines.push(line);
+          line = chars[i];
+        } else line = test;
+      }
+      if (line) lines.push(line);
+      lines.forEach((ln, idx) => ctx.fillText(ln, x, y + idx * lineHeight));
+    }
+
+    function burstConfetti() {
+      const box = document.getElementById("confetti");
+      box.classList.remove("hidden");
+      box.innerHTML = "";
+      const colors = ["#4ea1ff", "#7ec2ff", "#ffe27a", "#ffb4d0", "#b8e0ff"];
+      for (let i = 0; i < 48; i++) {
+        const el = document.createElement("i");
+        el.style.left = Math.random() * 100 + "%";
+        el.style.background = colors[i % colors.length];
+        el.style.animationDuration = 1.6 + Math.random() * 1.4 + "s";
+        el.style.animationDelay = Math.random() * 0.3 + "s";
+        box.appendChild(el);
+      }
+      setTimeout(() => {
+        box.classList.add("hidden");
+        box.innerHTML = "";
+      }, 3200);
+    }
+
+    // ---------- events ----------
+    document.getElementById("btnChild").onclick = () => {
+      mode = "child";
+      render();
+    };
+    document.getElementById("btnParent").onclick = () => {
+      if (parentUnlocked) {
+        mode = "parent";
+        render();
+        return;
+      }
+      pinBuffer = "";
+      updatePinDots();
+      document.getElementById("pinModal").classList.remove("hidden");
+    };
+
+    document.getElementById("pinPad").onclick = (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      const k = btn.getAttribute("data-k");
+      if (k === "cancel") {
+        document.getElementById("pinModal").classList.add("hidden");
+        pinBuffer = "";
+        return;
+      }
+      if (k === "del") {
+        pinBuffer = pinBuffer.slice(0, -1);
+        updatePinDots();
+        return;
+      }
+      if (pinBuffer.length >= 4) return;
+      pinBuffer += k;
+      updatePinDots();
+      if (pinBuffer.length === 4) {
+        if (pinBuffer === (state.pin || "1234")) {
+          parentUnlocked = true;
+          document.getElementById("pinModal").classList.add("hidden");
+          mode = "parent";
+          pinBuffer = "";
+          render();
+        } else {
+          pinBuffer = "";
+          updatePinDots();
+          alert("PIN 不正确");
+        }
+      }
+    };
+
+    function updatePinDots() {
+      const dots = document.querySelectorAll("#pinDots i");
+      dots.forEach((d, i) => d.classList.toggle("on", i < pinBuffer.length));
+    }
+
+    document.getElementById("startDate").addEventListener("change", updateRangePreview);
+    document.getElementById("goalDays").addEventListener("input", updateRangePreview);
+
+    document.getElementById("saveTask").onclick = () => {
+      const title = document.getElementById("taskTitle").value.trim() || "打卡挑战";
+      const reward = document.getElementById("rewardName").value.trim() || "心愿奖励";
+      const startDate = document.getElementById("startDate").value || todayStr();
+      const goalDays = Math.min(60, Math.max(3, Number(document.getElementById("goalDays").value) || 10));
+      const keepMarks = state.task && state.task.startDate === startDate ? (state.task.marks || {}) : {};
+      state.task = {
+        title,
+        reward,
+        startDate,
+        goalDays,
+        marks: keepMarks,
+        completedAt: null,
+      };
+      ensureCompleteFlag();
+      save();
+      alert("任务已保存");
+      render();
+    };
+
+    document.getElementById("resetAll").onclick = () => {
+      if (!confirm("确定清空全部任务与打卡记录？此操作不可恢复。")) return;
+      state = defaultState();
+      state.pin = loadPinKeep();
+      save();
+      parentUnlocked = true;
+      render();
+    };
+    function loadPinKeep() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return "1234";
+        return JSON.parse(raw).pin || "1234";
+      } catch {
+        return "1234";
+      }
+    }
+
+    document.getElementById("savePin").onclick = () => {
+      const v = document.getElementById("pinInput").value.trim();
+      if (!/^\d{4}$/.test(v)) {
+        alert("请输入 4 位数字");
+        return;
+      }
+      state.pin = v;
+      save();
+      alert("PIN 已更新");
+    };
+
+    document.getElementById("fillAllOk").onclick = fillAllOk;
+    document.getElementById("clearAllMarks").onclick = clearAllMarks;
+
+    document.getElementById("previewCert").onclick = () => {
+      if (!state.task) {
+        alert("请先保存任务");
+        return;
+      }
+      showCertificate(false);
+    };
+    document.getElementById("closeCert").onclick = () => {
+      document.getElementById("certModal").classList.add("hidden");
+    };
+    document.getElementById("saveCert").onclick = () => {
+      const canvas = document.getElementById("certCanvas");
+      const a = document.createElement("a");
+      a.href = canvas.toDataURL("image/png");
+      a.download = `打卡奖状-小宝子-${todayStr()}.png`;
+      a.click();
+    };
+
+    // init
+    if (!state.task) {
+      // soft demo empty
+    }
+    render();
+  </script>
+</body>
+</html>
