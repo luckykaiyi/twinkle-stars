@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="打卡挑战" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="favicon.png" />
   <title>Twinkle Stars · 打卡挑战</title>
   <style>
     :root {
@@ -25,6 +30,15 @@
       --blob3: #ffe9f3;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --fs-xs: 0.78rem;
+      --fs-sm: 0.88rem;
+      --fs-md: 1rem;
+      --fs-lg: 1.12rem;
+      --fs-xl: 1.28rem;
+      --fs-2xl: 1.55rem;
+      --fs-3xl: 1.9rem;
+      --lh-tight: 1.25;
+      --lh: 1.5;
     }
 
     html[data-theme="pink"] {
@@ -93,9 +107,13 @@
     }
 
     * { box-sizing: border-box; }
+    html {
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+      height: 100%;
+    }
     html, body {
       margin: 0;
-      min-height: 100%;
       font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
       color: var(--ink);
       background:
@@ -103,11 +121,27 @@
         radial-gradient(800px 480px at 100% 0%, var(--blob2) 0%, transparent 52%),
         radial-gradient(600px 400px at 70% 100%, var(--blob3) 0%, transparent 45%),
         linear-gradient(180deg, var(--bg0), var(--bg1));
+      background-attachment: fixed;
     }
     body {
-      padding: calc(16px + var(--safe-top)) 16px calc(24px + var(--safe-bottom));
+      min-height: 100%;
+      min-height: 100dvh;
+      padding: calc(12px + var(--safe-top)) 12px calc(12px + var(--safe-bottom));
       position: relative;
       overflow-x: hidden;
+      font-size: var(--fs-md);
+      line-height: var(--lh);
+      letter-spacing: 0.01em;
+      display: flex;
+      flex-direction: column;
+    }
+    @media (min-width: 768px) {
+      html { font-size: 17px; }
+      body { padding: calc(16px + var(--safe-top)) 20px calc(16px + var(--safe-bottom)); }
+    }
+    @media (min-width: 1100px) {
+      html { font-size: 18px; }
+      body { padding: calc(18px + var(--safe-top)) 24px calc(18px + var(--safe-bottom)); }
     }
     body::before, body::after {
       content: "";
@@ -127,55 +161,247 @@
       background: rgba(255, 255, 255, 0.45);
       box-shadow: -28px 18px 0 color-mix(in srgb, var(--blob1) 70%, white);
     }
-    .app { position: relative; z-index: 1; width: min(920px, 100%); margin: 0 auto; }
+
+    .app {
+      position: relative; z-index: 1;
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    @media (min-width: 1100px) {
+      .app { width: min(1320px, 100%); }
+    }
+    @media (min-width: 1440px) {
+      .app { width: min(1440px, 100%); }
+    }
+
+    #childView, #parentView {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+    }
+    #childView { overflow: hidden; }
+    #parentView {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 4px;
+    }
+    #childView > .card,
+    #parentView > .card { margin-top: 0; }
+    #childView > .stars-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    /* 手机竖屏：尽量利用首屏，星星区吃剩余高度 */
+    @media (max-width: 767px) and (orientation: portrait) {
+      #childView > .stars-panel {
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+      #childView > .stars-panel .days {
+        flex: 1;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        min-height: 168px;
+      }
+      #childView .day {
+        aspect-ratio: auto;
+        height: 100%;
+        min-height: 0;
+      }
+    }
+
+    /* iPad / 桌面竖屏：上下分区铺满 */
+    @media (min-width: 768px) and (orientation: portrait) {
+      #childView { gap: 16px; }
+      #childView > .hero { flex: 0 1 auto; }
+      #childView > .stars-panel {
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+      #childView > .stars-panel .days {
+        flex: 1;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        min-height: 0;
+      }
+      .hero {
+        grid-template-columns: 1.15fr 0.95fr;
+        align-items: stretch;
+      }
+      .ring { width: clamp(180px, 22vw, 240px); height: clamp(180px, 22vw, 240px); }
+      #childView .day { aspect-ratio: auto; min-height: 0; height: 100%; }
+    }
+
+    /* 小平板横屏 */
+    @media (min-width: 768px) and (max-width: 899px) and (orientation: landscape) {
+      #childView {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: minmax(0, 1fr);
+        gap: 12px;
+      }
+      #childView > .hero,
+      #childView > .stars-panel { height: 100%; min-height: 0; }
+      .hero { grid-template-columns: 1fr; height: 100%; }
+      .progress-ring-wrap { height: 100%; }
+      #childView .days {
+        flex: 1;
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        height: 100%;
+        gap: 10px;
+      }
+      #childView .day { aspect-ratio: auto; height: 100%; }
+      .ring { width: clamp(140px, 20vw, 180px); height: clamp(140px, 20vw, 180px); }
+    }
+
+    /* 横屏平板 / 宽屏：左右分栏铺满 */
+    @media (min-width: 900px) and (orientation: landscape), (min-width: 1200px) {
+      #childView {
+        display: grid;
+        grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr);
+        gap: 16px;
+        align-items: stretch;
+      }
+      #childView > .hero,
+      #childView > .stars-panel {
+        height: 100%;
+        min-height: 0;
+        flex: unset;
+      }
+      .hero {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto minmax(0, 1fr);
+        height: 100%;
+      }
+      .progress-ring-wrap { min-height: 0; height: 100%; }
+      .ring { width: clamp(170px, 18vw, 230px); height: clamp(170px, 18vw, 230px); }
+      #childView > .stars-panel .days {
+        flex: 1;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        height: 100%;
+        min-height: 0;
+      }
+      #childView .day { aspect-ratio: auto; height: 100%; min-height: 0; }
+
+      #parentView {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-auto-rows: minmax(0, auto);
+        gap: 16px;
+        align-content: start;
+      }
+      #parentView > .card:first-child,
+      #parentView > .card:nth-child(4) { grid-column: 1 / -1; }
+      #parentView .days {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+    }
+
+    /* 手机横屏：尽量单屏 */
+    @media (max-height: 480px) and (orientation: landscape) {
+      body { padding: 8px 10px; }
+      .topbar { margin-bottom: 8px; }
+      .brand p { display: none; }
+      #childView {
+        display: grid;
+        grid-template-columns: 1fr 1.1fr;
+        gap: 10px;
+      }
+      #childView > .hero,
+      #childView > .stars-panel { height: 100%; min-height: 0; }
+      .hero { gap: 8px; }
+      .ring { width: 110px; height: 110px; }
+      #childView .days {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        height: 100%;
+        gap: 6px;
+      }
+      #childView .day { aspect-ratio: auto; height: 100%; border-radius: 12px; gap: 1px; }
+      .card { padding: 12px; border-radius: 18px; }
+    }
 
     .topbar {
       display: flex; align-items: center; justify-content: space-between;
-      gap: 12px; margin-bottom: 16px;
+      gap: 12px; margin-bottom: 12px; flex-shrink: 0;
     }
-    .brand h1 { margin: 0; font-size: clamp(1.2rem, 2.5vw, 1.55rem); letter-spacing: 0.02em; }
-    .brand p { margin: 2px 0 0; color: var(--muted); font-size: 0.85rem; }
+    .brand h1 {
+      margin: 0; font-size: clamp(1.28rem, 2.6vw, 1.72rem);
+      font-weight: 700; letter-spacing: 0.02em; line-height: var(--lh-tight);
+    }
+    .brand p {
+      margin: 4px 0 0; color: var(--muted);
+      font-size: var(--fs-sm); line-height: 1.4;
+    }
     .mode-switch {
       display: inline-flex; background: var(--card); border: 1px solid var(--line);
-      border-radius: 999px; padding: 4px; box-shadow: var(--shadow);
+      border-radius: 999px; padding: 4px; box-shadow: var(--shadow); flex-shrink: 0;
     }
     .mode-switch button {
-      border: 0; background: transparent; padding: 8px 14px; border-radius: 999px;
-      font-size: 0.9rem; color: var(--muted); cursor: pointer;
+      border: 0; background: transparent; padding: 9px 16px; border-radius: 999px;
+      font-size: var(--fs-sm); font-weight: 600; color: var(--muted); cursor: pointer;
     }
     .mode-switch button.active {
       background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 85%, white), var(--primary));
-      color: #fff; font-weight: 600;
+      color: #fff;
       box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 40%, transparent);
     }
 
     .card {
       background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
-      box-shadow: var(--shadow); padding: 18px; backdrop-filter: blur(8px);
+      box-shadow: var(--shadow); padding: 16px; backdrop-filter: blur(8px);
     }
-    .card + .card { margin-top: 14px; }
+    @media (min-width: 768px) {
+      .card { padding: 20px; }
+    }
+    .section-title {
+      display: block; margin: 0 0 6px;
+      font-size: var(--fs-lg); font-weight: 700; letter-spacing: 0.01em; line-height: var(--lh-tight);
+    }
+    .section-head {
+      display: flex; justify-content: space-between; align-items: baseline;
+      gap: 10px; margin-bottom: 12px; flex-shrink: 0;
+    }
+    .section-head .meta {
+      color: var(--muted); font-size: var(--fs-xs); line-height: 1.35; text-align: right;
+    }
     .hidden { display: none !important; }
 
-    .hero { display: grid; gap: 14px; }
-    @media (min-width: 768px) {
-      .hero { grid-template-columns: 1.1fr 0.9fr; align-items: stretch; }
-    }
+    .hero { display: grid; gap: 14px; align-content: start; }
 
     .reward-box {
       background: linear-gradient(145deg, #fff 0%, color-mix(in srgb, var(--blob2) 60%, white) 100%);
-      border-radius: 22px; padding: 16px;
+      border-radius: 22px; padding: 16px 18px;
       border: 2px dashed color-mix(in srgb, var(--primary) 45%, transparent);
     }
-    .reward-box .label { font-size: 0.8rem; color: var(--muted); margin-bottom: 6px; }
+    .reward-box .label {
+      font-size: var(--fs-xs); color: var(--muted); margin-bottom: 6px;
+      font-weight: 600; letter-spacing: 0.04em;
+    }
     .reward-box .name {
-      font-size: 1.35rem; font-weight: 700; color: var(--primary-deep); word-break: break-word;
+      font-size: clamp(1.28rem, 3vw, 1.75rem); font-weight: 700;
+      color: var(--primary-deep); word-break: break-word; line-height: var(--lh-tight);
     }
 
     .progress-ring-wrap {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 8px; padding: 8px 0;
+      gap: 10px; padding: 8px 0 4px;
     }
-    .ring { width: 150px; height: 150px; position: relative; }
+    .ring-caption { color: var(--muted); font-size: var(--fs-sm); font-weight: 500; }
+    .ring { width: clamp(140px, 38vw, 180px); height: clamp(140px, 38vw, 180px); position: relative; }
     .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
     .ring .bg { stroke: color-mix(in srgb, var(--primary) 18%, transparent); }
     .ring .fg {
@@ -185,23 +411,31 @@
     .ring .center {
       position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
     }
-    .ring .center strong { display: block; font-size: 1.8rem; line-height: 1.1; }
-    .ring .center span { font-size: 0.8rem; color: var(--muted); }
+    .ring .center strong {
+      display: block; font-size: var(--fs-3xl); line-height: 1; font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .ring .center span { font-size: var(--fs-sm); color: var(--muted); font-weight: 500; }
 
     .days {
-      display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px;
-    }
-    @media (min-width: 600px) {
-      .days { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+      display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px;
+      min-height: 0;
     }
     .day {
-      aspect-ratio: 1; border-radius: 20px; border: 2px solid var(--line); background: #fff;
+      aspect-ratio: 1; border-radius: 16px; border: 2px solid var(--line); background: #fff;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 2px; position: relative; transition: transform 0.2s ease, box-shadow 0.2s ease;
+      gap: 3px; padding: 6px 4px; position: relative; min-width: 0;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    .day .n { font-size: 0.68rem; color: var(--muted); }
-    .day .d { font-size: 0.62rem; color: color-mix(in srgb, var(--muted) 80%, white); line-height: 1.1; }
-    .day .icon { font-size: 1.45rem; line-height: 1; font-weight: 700; }
+    .day .n {
+      font-size: clamp(0.72rem, 1.6vw, 0.9rem); color: var(--muted);
+      font-weight: 600; line-height: 1.1;
+    }
+    .day .d {
+      font-size: clamp(0.66rem, 1.4vw, 0.8rem);
+      color: color-mix(in srgb, var(--muted) 88%, white); line-height: 1.1;
+    }
+    .day .icon { font-size: clamp(1.4rem, 3.2vw, 2rem); line-height: 1; font-weight: 700; }
     .day .icon.star-off { color: #c9d8ea; }
     .day .icon.star-on {
       color: #ffd000; -webkit-text-fill-color: #ffd000;
@@ -209,16 +443,11 @@
       text-shadow: 0 1px 0 #e6a800;
       animation: shine 1.8s ease-in-out infinite;
     }
-    .day .icon.star-fail { color: var(--bad); font-size: 1.2rem; -webkit-text-fill-color: var(--bad); filter: none; }
     .day.todo { opacity: 0.92; background: linear-gradient(160deg, #fff, color-mix(in srgb, var(--blob2) 50%, white)); }
     .day.done {
       background: linear-gradient(160deg, #fff8d6, #ffe9a8);
       border-color: rgba(255, 196, 0, 0.65);
       box-shadow: 0 6px 16px rgba(255, 196, 0, 0.28);
-    }
-    .day.fail {
-      background: linear-gradient(160deg, #fff0f5, #ffe4ec);
-      border-color: color-mix(in srgb, var(--bad) 45%, transparent);
     }
     .day.today { box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 30%, transparent); }
     .day.done.today {
@@ -238,21 +467,21 @@
     }
 
     .status-banner {
-      margin-top: 12px; padding: 12px 14px; border-radius: 16px;
+      margin-top: 12px; padding: 13px 15px; border-radius: 16px;
       background: color-mix(in srgb, var(--primary) 14%, white);
-      color: var(--primary-deep); font-size: 0.95rem; line-height: 1.45;
+      color: var(--primary-deep); font-size: var(--fs-sm); line-height: 1.55;
     }
     .status-banner.warn {
       background: color-mix(in srgb, var(--sun) 35%, white); color: #8a6a10;
     }
     .status-banner.win {
       background: linear-gradient(120deg, color-mix(in srgb, var(--primary) 18%, white), color-mix(in srgb, var(--sun) 35%, white));
-      color: var(--primary-deep); font-weight: 600;
+      color: var(--primary-deep); font-weight: 700; font-size: var(--fs-md);
     }
 
     .btn {
-      appearance: none; border: 0; border-radius: 14px; padding: 12px 16px;
-      font-size: 0.95rem; font-weight: 600; cursor: pointer;
+      appearance: none; border: 0; border-radius: 14px; padding: 13px 16px;
+      font-size: var(--fs-md); font-weight: 600; cursor: pointer; line-height: 1.2;
       transition: transform 0.15s ease, opacity 0.15s ease;
     }
     .btn:active { transform: scale(0.98); }
@@ -270,25 +499,20 @@
     .btn-row .btn, .parent-toolbar .btn { flex: 1 1 140px; }
 
     label.field {
-      display: grid; gap: 6px; margin-bottom: 12px; font-size: 0.9rem; color: var(--muted);
+      display: grid; gap: 7px; margin-bottom: 14px;
+      font-size: var(--fs-sm); font-weight: 600; color: var(--muted);
     }
     label.field input, label.field textarea, label.field select {
       width: 100%; border: 1px solid var(--line); border-radius: 12px;
-      padding: 12px 14px; font-size: 1rem; color: var(--ink); background: #fff; font-family: inherit;
+      padding: 13px 14px; font-size: var(--fs-md); font-weight: 500;
+      color: var(--ink); background: #fff; font-family: inherit; line-height: 1.3;
     }
-    .field-row {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-    }
-    @media (max-width: 520px) {
-      .field-row { grid-template-columns: 1fr; }
-    }
-
     .theme-grid {
       display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px;
     }
     .theme-chip {
-      border: 2px solid var(--line); border-radius: 14px; padding: 10px 6px; background: #fff;
-      cursor: pointer; text-align: center; font-size: 0.75rem; color: var(--ink);
+      border: 2px solid var(--line); border-radius: 14px; padding: 11px 6px; background: #fff;
+      cursor: pointer; text-align: center; font-size: var(--fs-xs); font-weight: 600; color: var(--ink);
     }
     .theme-chip.active { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent); font-weight: 700; }
     .theme-dot {
@@ -296,9 +520,62 @@
       box-shadow: inset 0 0 0 2px rgba(255,255,255,0.7);
     }
 
-    .hint { font-size: 0.82rem; color: var(--muted); line-height: 1.45; margin: 0 0 12px; }
-    .empty { text-align: center; padding: 28px 12px; color: var(--muted); }
-    .empty strong { color: var(--ink); display: block; margin-bottom: 6px; font-size: 1.05rem; }
+    .hint {
+      font-size: var(--fs-sm); color: var(--muted); line-height: 1.55;
+      margin: 0 0 14px;
+    }
+    .skin-label {
+      font-size: var(--fs-sm); font-weight: 600; color: var(--muted); margin: 0 0 8px;
+    }
+    .empty { text-align: center; padding: 28px 12px; color: var(--muted); font-size: var(--fs-sm); }
+    .days .empty { grid-column: 1 / -1; }
+    .empty strong {
+      color: var(--ink); display: block; margin-bottom: 8px;
+      font-size: var(--fs-lg); font-weight: 700;
+    }
+
+    .toast-host {
+      position: fixed; left: 50%; bottom: calc(28px + var(--safe-bottom));
+      transform: translateX(-50%);
+      z-index: 90; display: flex; flex-direction: column; align-items: center;
+      gap: 8px; pointer-events: none; width: min(420px, calc(100% - 24px));
+    }
+    .toast {
+      pointer-events: none; width: 100%;
+      padding: 12px 16px; border-radius: 16px;
+      background: rgba(36, 58, 85, 0.92); color: #fff;
+      font-size: var(--fs-sm); font-weight: 600; line-height: 1.45;
+      text-align: center; box-shadow: 0 10px 28px rgba(36, 58, 85, 0.22);
+      backdrop-filter: blur(10px);
+      opacity: 0; transform: translateY(10px) scale(0.98);
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    .toast.show { opacity: 1; transform: translateY(0) scale(1); }
+    .toast.ok { background: color-mix(in srgb, var(--primary-deep) 88%, #243a55); }
+    .toast.warn { background: rgba(138, 106, 16, 0.92); }
+    .toast.err { background: color-mix(in srgb, var(--bad) 82%, #5a2030); }
+
+    .ask-mask {
+      position: fixed; inset: 0; z-index: 85;
+      display: grid; align-items: end; justify-items: center;
+      padding: 16px; padding-bottom: calc(16px + var(--safe-bottom));
+      background: rgba(20, 30, 34, 0.28);
+    }
+    .ask-sheet {
+      width: min(420px, 100%); background: #fff; border-radius: 22px;
+      padding: 20px 18px 16px; box-shadow: var(--shadow); text-align: center;
+      animation: ask-up 0.22s ease;
+    }
+    @keyframes ask-up {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .ask-sheet p {
+      margin: 0 0 16px; color: var(--ink); font-size: var(--fs-md);
+      font-weight: 600; line-height: 1.5;
+    }
+    .ask-actions { display: flex; gap: 10px; }
+    .ask-actions .btn { flex: 1; }
 
     .modal-mask, .cert-mask {
       position: fixed; inset: 0; display: grid; place-items: center; padding: 16px; z-index: 50;
@@ -306,19 +583,51 @@
     }
     .cert-mask { z-index: 60; background: rgba(20, 30, 34, 0.55); overflow: auto; }
     .modal {
-      width: min(420px, 100%); background: #fff; border-radius: 20px; padding: 20px; box-shadow: var(--shadow);
+      width: min(360px, 100%); background: #fff; border-radius: 22px; padding: 24px 22px 20px;
+      box-shadow: var(--shadow); text-align: center;
     }
-    .modal h3 { margin: 0 0 8px; }
-    .modal p { margin: 0 0 14px; color: var(--muted); font-size: 0.9rem; }
-    .pin-dots { display: flex; justify-content: center; gap: 10px; margin: 8px 0 14px; }
-    .pin-dots i { width: 12px; height: 12px; border-radius: 50%; background: #dde4e6; display: block; }
-    .pin-dots i.on { background: var(--primary); }
-    .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .pad button {
-      border: 0; border-radius: 14px; padding: 14px 0; font-size: 1.2rem; background: #f4f7f8; cursor: pointer;
+    .modal h3 { margin: 0 0 6px; font-size: var(--fs-xl); font-weight: 700; }
+    .modal p { margin: 0 0 18px; color: var(--muted); font-size: var(--fs-sm); line-height: 1.5; }
+    .code-boxes {
+      display: flex; justify-content: center; gap: 12px; margin: 0 0 12px;
     }
-    .cert-panel { width: min(520px, 100%); display: grid; gap: 12px; }
+    .code-boxes input {
+      width: 52px; height: 60px; border: 2px solid var(--line); border-radius: 14px;
+      text-align: center; font-size: 1.55rem; font-weight: 700; color: var(--ink);
+      background: #fff; font-family: inherit; caret-color: var(--primary);
+      -moz-appearance: textfield;
+    }
+    .code-boxes input::-webkit-outer-spin-button,
+    .code-boxes input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .code-boxes input:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent);
+    }
+    .code-boxes.shake { animation: code-shake 0.35s ease; }
+    @keyframes code-shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    .lock-error {
+      min-height: 1.3em; margin: 0 0 14px; color: var(--bad);
+      font-size: var(--fs-sm); font-weight: 600;
+    }
+    .modal-actions { display: flex; justify-content: center; }
+    .modal-actions .btn { min-width: 120px; }
+    .code-set .code-boxes { justify-content: flex-start; margin-bottom: 14px; }
+    .code-set .code-boxes input { width: 48px; height: 54px; font-size: 1.35rem; }
+    .cert-panel { width: min(560px, 100%); display: grid; gap: 14px; }
     #certCanvas { width: 100%; height: auto; border-radius: 16px; box-shadow: var(--shadow); background: #fff; }
+    .cert-actions {
+      display: flex; gap: 10px; align-items: stretch;
+    }
+    .cert-actions .btn {
+      flex: 1 1 0; white-space: nowrap; padding: 13px 12px;
+      font-size: clamp(0.92rem, 3.2vw, 1rem);
+    }
+    .cert-actions .btn-primary { flex: 1.35 1 0; }
+    .cert-hint { color: #fff !important; text-align: center; margin: 0; font-size: var(--fs-sm); opacity: 0.92; }
     .confetti { pointer-events: none; position: fixed; inset: 0; overflow: hidden; z-index: 70; }
     .confetti i {
       position: absolute; top: -10px; width: 8px; height: 14px; border-radius: 2px;
@@ -334,7 +643,7 @@
     <div class="topbar">
       <div class="brand">
         <h1 id="mainTitle">打卡挑战 ☁️</h1>
-        <p id="subtitle">一点点完成，金星会发光哦</p>
+        <p id="subtitle">一点点完成，星星会发光哦</p>
       </div>
       <div class="mode-switch" role="tablist">
         <button type="button" id="btnChild" class="active">宝宝</button>
@@ -366,13 +675,13 @@
               </div>
             </div>
           </div>
-          <div style="color:var(--muted);font-size:0.85rem;">当前连续完成</div>
+          <div class="ring-caption">当前连续完成</div>
         </div>
       </div>
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <strong>金星进度</strong>
-          <span style="color:var(--muted);font-size:0.82rem;" id="rangeText"></span>
+      <div class="card stars-panel">
+        <div class="section-head">
+          <strong class="section-title" style="margin:0;">星星进度</strong>
+          <span class="meta" id="rangeText"></span>
         </div>
         <div class="days" id="childDays"></div>
       </div>
@@ -380,24 +689,12 @@
 
     <section id="parentView" class="hidden">
       <div class="card">
-        <strong style="display:block;margin-bottom:8px;">宝宝与皮肤</strong>
+        <strong class="section-title">宝宝与皮肤</strong>
         <p class="hint">昵称会用在鼓励文案和奖状里。皮肤立刻作用于整页配色。</p>
         <label class="field">宝宝昵称
-          <input id="babyName" type="text" maxlength="20" placeholder="例如：豆豆" />
+          <input id="babyName" type="text" maxlength="20" placeholder="例如：小宝子" />
         </label>
-        <div class="field-row">
-          <label class="field">性别
-            <select id="babyGender">
-              <option value="other">保密 / 不展示</option>
-              <option value="girl">女孩</option>
-              <option value="boy">男孩</option>
-            </select>
-          </label>
-          <label class="field">年龄
-            <input id="babyAge" type="text" maxlength="10" placeholder="例如：4岁" />
-          </label>
-        </div>
-        <div class="hint" style="margin-bottom:8px;">皮肤风格</div>
+        <div class="skin-label">皮肤风格</div>
         <div class="theme-grid" id="themeGrid">
           <button type="button" class="theme-chip" data-theme="blue"><span class="theme-dot" style="background:#4ea1ff"></span>蓝色</button>
           <button type="button" class="theme-chip" data-theme="pink"><span class="theme-dot" style="background:#ff8fb8"></span>粉色</button>
@@ -411,7 +708,7 @@
       </div>
 
       <div class="card">
-        <strong style="display:block;margin-bottom:8px;">任务设置</strong>
+        <strong class="section-title">任务设置</strong>
         <p class="hint">连续打卡：未点亮的天数不计入连续。任务内容写在名称里即可。</p>
         <label class="field">任务名称
           <input id="taskTitle" type="text" maxlength="40" placeholder="例如：夜间不尿床挑战" />
@@ -433,8 +730,8 @@
       </div>
 
       <div class="card">
-        <strong style="display:block;margin-bottom:8px;">每日打卡</strong>
-        <p class="hint">点格子点亮金星＝当天完成；再点一下＝取消当格。全部清空请用「一键清除」。</p>
+        <strong class="section-title">每日打卡</strong>
+        <p class="hint">点格子点亮星星＝当天完成；再点一下＝取消当格。全部清空请用「一键清除」。</p>
         <div class="parent-toolbar">
           <button type="button" class="btn btn-sun" id="fillAllOk">一键打满</button>
           <button type="button" class="btn btn-secondary" id="clearAllMarks">一键清除</button>
@@ -443,36 +740,37 @@
       </div>
 
       <div class="card">
-        <strong style="display:block;margin-bottom:8px;">家长设置</strong>
-        <label class="field">童锁 PIN（4 位数字）
-          <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="默认 1234" />
-        </label>
+        <strong class="section-title">家长设置</strong>
+        <div class="code-set">
+          <div class="skin-label">设置童锁（4 位数字，默认 1234）</div>
+          <div class="code-boxes" id="lockSetBoxes">
+            <input class="lock-set-digit" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="童锁第1位" />
+            <input class="lock-set-digit" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="童锁第2位" />
+            <input class="lock-set-digit" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="童锁第3位" />
+            <input class="lock-set-digit" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="童锁第4位" />
+          </div>
+        </div>
         <div class="btn-row">
-          <button type="button" class="btn btn-secondary" id="savePin">保存 PIN</button>
+          <button type="button" class="btn btn-secondary" id="saveLock">保存童锁</button>
           <button type="button" class="btn btn-sun" id="previewCert">预览奖状</button>
         </div>
       </div>
     </section>
   </div>
 
-  <div class="modal-mask hidden" id="pinModal">
-    <div class="modal">
-      <h3>家长验证</h3>
-      <p>输入 4 位数字 PIN，才能进入家长界面。</p>
-      <div class="pin-dots" id="pinDots"><i></i><i></i><i></i><i></i></div>
-      <div class="pad" id="pinPad">
-        <button type="button" data-k="1">1</button>
-        <button type="button" data-k="2">2</button>
-        <button type="button" data-k="3">3</button>
-        <button type="button" data-k="4">4</button>
-        <button type="button" data-k="5">5</button>
-        <button type="button" data-k="6">6</button>
-        <button type="button" data-k="7">7</button>
-        <button type="button" data-k="8">8</button>
-        <button type="button" data-k="9">9</button>
-        <button type="button" data-k="cancel">取消</button>
-        <button type="button" data-k="0">0</button>
-        <button type="button" data-k="del">删除</button>
+  <div class="modal-mask hidden" id="lockModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="lockTitle">
+      <h3 id="lockTitle">童锁</h3>
+      <p>输入 4 位数字进入家长页</p>
+      <div class="code-boxes" id="lockBoxes">
+        <input class="lock-digit" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" aria-label="第1位" />
+        <input class="lock-digit" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" aria-label="第2位" />
+        <input class="lock-digit" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" aria-label="第3位" />
+        <input class="lock-digit" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" aria-label="第4位" />
+      </div>
+      <p class="lock-error" id="lockError" aria-live="polite"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="lockCancel">取消</button>
       </div>
     </div>
   </div>
@@ -480,31 +778,42 @@
   <div class="cert-mask hidden" id="certModal">
     <div class="cert-panel">
       <canvas id="certCanvas" width="1080" height="1520"></canvas>
-      <div class="btn-row">
-        <button type="button" class="btn btn-primary" id="saveCert">保存图片到相册／下载</button>
+      <div class="cert-actions">
+        <button type="button" class="btn btn-primary" id="saveCert">保存奖状</button>
         <button type="button" class="btn btn-secondary" id="closeCert">关闭</button>
       </div>
-      <p class="hint" style="color:#fff;text-align:center;">手机可长按图片或点保存后，在系统相册中查看。</p>
+      <p class="hint cert-hint">保存后可在系统相册中查看；也可长按奖状图片保存。</p>
     </div>
   </div>
 
   <div class="confetti hidden" id="confetti"></div>
+  <div class="toast-host" id="toastHost" aria-live="polite"></div>
+  <div class="ask-mask hidden" id="askMask" role="dialog" aria-modal="true">
+    <div class="ask-sheet">
+      <p id="askText"></p>
+      <div class="ask-actions">
+        <button type="button" class="btn btn-secondary" id="askCancel">取消</button>
+        <button type="button" class="btn btn-primary" id="askOk">确定</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     const STORAGE_KEY = "twinkle-stars-v1";
     const CIRC = 2 * Math.PI * 52;
     const THEMES = ["blue", "pink", "green", "yellow", "purple"];
+    const DEFAULT_NICKNAME = "小宝子";
+    const DEFAULT_LOCK_CODE = "1234";
 
     const defaultState = () => ({
-      pin: "1234",
+      lockCode: DEFAULT_LOCK_CODE,
       theme: "blue",
-      profile: { nickname: "", gender: "other", age: "" },
+      profile: { nickname: DEFAULT_NICKNAME },
       task: null,
     });
 
     let state = load();
     let mode = "child";
-    let pinBuffer = "";
     let parentUnlocked = false;
 
     function load() {
@@ -512,10 +821,11 @@
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return defaultState();
         const parsed = JSON.parse(raw);
+        const nickname = ((parsed.profile && parsed.profile.nickname) || "").trim() || DEFAULT_NICKNAME;
         return {
           ...defaultState(),
           ...parsed,
-          profile: { ...defaultState().profile, ...(parsed.profile || {}) },
+          profile: { nickname },
         };
       } catch {
         return defaultState();
@@ -523,18 +833,40 @@
     }
     function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 
+    let askResolver = null;
+    function toast(message, type = "ok") {
+      const host = document.getElementById("toastHost");
+      const el = document.createElement("div");
+      el.className = `toast ${type}`;
+      el.textContent = message;
+      host.appendChild(el);
+      requestAnimationFrame(() => el.classList.add("show"));
+      const life = type === "err" || type === "warn" ? 2600 : 2000;
+      setTimeout(() => {
+        el.classList.remove("show");
+        setTimeout(() => el.remove(), 240);
+      }, life);
+    }
+    function askConfirm(message) {
+      return new Promise((resolve) => {
+        if (askResolver) askResolver(false);
+        askResolver = resolve;
+        document.getElementById("askText").textContent = message;
+        document.getElementById("askMask").classList.remove("hidden");
+      });
+    }
+    function closeAsk(result) {
+      document.getElementById("askMask").classList.add("hidden");
+      if (askResolver) {
+        const r = askResolver;
+        askResolver = null;
+        r(result);
+      }
+    }
+
     function babyName() {
       const n = (state.profile?.nickname || "").trim();
-      return n || "宝宝";
-    }
-    function pronoun() {
-      const g = state.profile?.gender;
-      if (g === "girl") return "她";
-      if (g === "boy") return "他";
-      return "TA";
-    }
-    function ageText() {
-      return (state.profile?.age || "").trim();
+      return n || DEFAULT_NICKNAME;
     }
 
     function applyTheme(theme) {
@@ -582,28 +914,18 @@
       if (!task) return 0;
       const marks = task.marks || {};
       let streak = 0;
-      let cursor = todayStr();
-      if (marks[cursor] !== "ok") cursor = addDays(cursor, -1);
-      for (let i = 0; i < task.goalDays * 4; i++) {
-        if (marks[cursor] === "ok") {
-          streak += 1;
-          cursor = addDays(cursor, -1);
-        } else break;
+      for (let i = 0; i < task.goalDays; i++) {
+        if (marks[addDays(task.startDate, i)] === "ok") streak += 1;
+        else break;
       }
-      return Math.min(streak, task.goalDays);
+      return streak;
     }
 
     function currentRoundSlots(task) {
       if (!task) return [];
-      const marks = task.marks || {};
-      const fails = Object.keys(marks).filter((k) => marks[k] === "fail").sort();
-      let roundStart = task.startDate;
-      if (fails.length) roundStart = addDays(fails[fails.length - 1], 1);
-      if (roundStart < task.startDate) roundStart = task.startDate;
-      return dateList(roundStart, task.goalDays).map((date, idx) => ({
+      return dateList(task.startDate, task.goalDays).map((date, idx) => ({
         date,
         index: idx + 1,
-        status: marks[date] || "todo",
       }));
     }
 
@@ -629,7 +951,7 @@
     function updateChromeCopy() {
       const name = babyName();
       document.getElementById("mainTitle").textContent = `${name}的打卡挑战 ☁️`;
-      document.getElementById("subtitle").textContent = `${name}加油！点亮金星兑奖励～`;
+      document.getElementById("subtitle").textContent = `${name}加油！点亮星星兑奖励～`;
       document.title = `${name}的打卡挑战 · Twinkle Stars`;
     }
 
@@ -656,10 +978,6 @@
         el.classList.add("done");
         iconClass = "icon star-on";
         icon = "★";
-      } else if (mark === "fail") {
-        el.classList.add("fail");
-        iconClass = "icon star-fail";
-        icon = "✕";
       } else {
         el.classList.add("todo");
       }
@@ -706,7 +1024,7 @@
         document.getElementById("goalNum").textContent = "10";
         document.getElementById("rangeText").textContent = "";
         document.getElementById("childDays").innerHTML =
-          `<div class="empty" style="grid-column:1/-1"><strong>星星还在睡觉</strong>请先在家长页发布任务</div>`;
+          `<div class="empty"><strong>星星还在睡觉</strong>请先在家长页发布任务</div>`;
         setRing(0, 10);
         banner.className = "status-banner warn";
         banner.textContent = `先切换到「家长」发布任务，再回来看${name}的进度哦。`;
@@ -737,8 +1055,8 @@
         banner.className = "status-banner";
         const left = task.goalDays - streak;
         banner.textContent = streak === 0
-          ? `${name}完成「${task.title}」就能点亮金星～连续 ${task.goalDays} 天可兑奖励哦。`
-          : `${name}已经连续 ${streak} 天啦！再坚持 ${left} 天，金星就集齐咯！`;
+          ? `${name}完成「${task.title}」就能点亮星星～连续 ${task.goalDays} 天可兑奖励哦。`
+          : `${name}已经连续 ${streak} 天啦！再坚持 ${left} 天，星星就集齐咯！`;
       }
     }
 
@@ -746,14 +1064,18 @@
       const fg = document.getElementById("ringFg");
       const ratio = goal ? Math.min(streak / goal, 1) : 0;
       fg.style.strokeDasharray = String(CIRC);
-      fg.style.strokeDashoffset = String(CIRC * (1 - ratio));
+      if (ratio >= 1) {
+        fg.style.strokeDashoffset = "0";
+        fg.style.strokeLinecap = "butt";
+      } else {
+        fg.style.strokeDashoffset = String(CIRC * (1 - ratio));
+        fg.style.strokeLinecap = "round";
+      }
     }
 
     function renderParent() {
       const task = state.task;
       document.getElementById("babyName").value = state.profile.nickname || "";
-      document.getElementById("babyGender").value = state.profile.gender || "other";
-      document.getElementById("babyAge").value = state.profile.age || "";
 
       if (task) {
         document.getElementById("taskTitle").value = task.title || "";
@@ -765,8 +1087,7 @@
       }
       updateRangePreview();
       renderParentDays();
-      document.getElementById("pinInput").value = "";
-      document.getElementById("pinInput").placeholder = "当前已设置（默认 1234）";
+      clearCodeBoxes(document.querySelectorAll(".lock-set-digit"));
     }
 
     function updateRangePreview() {
@@ -785,36 +1106,40 @@
       const wrap = document.getElementById("parentDays");
       const task = state.task;
       if (!task) {
-        wrap.innerHTML = `<div class="empty" style="grid-column:1/-1"><strong>还没有任务</strong>先填写上方信息并保存</div>`;
+        wrap.innerHTML = `<div class="empty"><strong>还没有任务</strong>先填写上方信息并保存</div>`;
         return;
       }
       wrap.innerHTML = "";
       currentRoundSlots(task).forEach((slot) => wrap.appendChild(buildDayCell(slot, task, true)));
     }
 
-    function fillAllOk() {
+    async function fillAllOk() {
       const task = state.task;
-      if (!task) return alert("请先保存任务");
-      if (!confirm(`将当前这一轮 ${task.goalDays} 天全部点亮为「完成」？`)) return;
+      if (!task) return toast("请先保存任务", "warn");
+      const ok = await askConfirm(`将当前这一轮 ${task.goalDays} 天全部点亮为「完成」？`);
+      if (!ok) return;
       if (!task.marks) task.marks = {};
       currentRoundSlots(task).forEach((slot) => { task.marks[slot.date] = "ok"; });
       const justWon = ensureCompleteFlag();
       save();
       render();
+      toast("已全部点亮");
       if (justWon) {
         burstConfetti();
         setTimeout(() => showCertificate(true), 350);
       }
     }
 
-    function clearAllMarks() {
+    async function clearAllMarks() {
       const task = state.task;
-      if (!task) return alert("请先保存任务");
-      if (!confirm("清除当前任务的全部打卡标记？")) return;
+      if (!task) return toast("请先保存任务", "warn");
+      const ok = await askConfirm("清除当前任务的全部打卡标记？");
+      if (!ok) return;
       task.marks = {};
       task.completedAt = null;
       save();
       render();
+      toast("打卡标记已清除");
     }
 
     function themeColors() {
@@ -841,64 +1166,116 @@
       const w = canvas.width;
       const h = canvas.height;
       const name = babyName();
-      const age = ageText();
       const colors = themeColors();
+      const font = "PingFang SC, Hiragino Sans GB, Noto Sans SC, sans-serif";
+      const when = task.completedAt ? new Date(task.completedAt) : new Date();
+      const title = task.title || "打卡挑战";
+      const reward = task.reward || "神秘礼物";
 
       const g = ctx.createLinearGradient(0, 0, w, h);
       g.addColorStop(0, colors.a);
-      g.addColorStop(0.45, colors.b);
+      g.addColorStop(0.5, colors.b);
       g.addColorStop(1, colors.c);
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
 
-      ctx.fillStyle = "rgba(255,255,255,0.55)";
-      ctx.beginPath(); ctx.arc(180, 260, 50, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(900, 400, 70, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(220, 1200, 60, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.beginPath(); ctx.arc(160, 240, 56, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(920, 380, 78, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(200, 1240, 68, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(880, 1180, 42, 0, Math.PI * 2); ctx.fill();
 
       ctx.strokeStyle = colors.main;
-      ctx.lineWidth = 14;
-      roundRect(ctx, 48, 48, w - 96, h - 96, 48);
+      ctx.lineWidth = 12;
+      roundRect(ctx, 52, 52, w - 104, h - 104, 44);
       ctx.stroke();
-      ctx.strokeStyle = "rgba(255, 226, 122, 0.85)";
-      ctx.lineWidth = 5;
-      roundRect(ctx, 72, 72, w - 144, h - 144, 40);
+      ctx.strokeStyle = "rgba(255, 214, 90, 0.9)";
+      ctx.lineWidth = 4;
+      roundRect(ctx, 78, 78, w - 156, h - 156, 36);
       ctx.stroke();
 
-      ctx.fillStyle = colors.deep;
-      ctx.font = "bold 64px PingFang SC, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("荣誉奖状", w / 2, 220);
+      ctx.textBaseline = "alphabetic";
+
+      ctx.fillStyle = colors.deep;
+      ctx.font = `700 78px ${font}`;
+      ctx.fillText("荣誉奖状", w / 2, 230);
+
+      ctx.strokeStyle = colorWithAlpha(colors.main, 0.55);
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(w / 2 - 120, 268);
+      ctx.lineTo(w / 2 + 120, 268);
+      ctx.stroke();
+      ctx.fillStyle = "#ffd000";
+      ctx.font = `48px serif`;
+      ctx.fillText("★", w / 2, 286);
+
+      ctx.fillStyle = "#6b8199";
+      ctx.font = `500 30px ${font}`;
+      ctx.fillText("特此颁发给", w / 2, 360);
 
       ctx.fillStyle = "#243a55";
-      ctx.font = "40px PingFang SC, sans-serif";
-      ctx.fillText(`颁发给最棒的${name}`, w / 2, 320);
+      ctx.font = `700 68px ${font}`;
+      ctx.fillText(name, w / 2, 450);
 
-      ctx.fillStyle = "#6b8199";
-      ctx.font = "30px PingFang SC, sans-serif";
-      if (age) ctx.fillText(`（${age}）`, w / 2, 370);
+      ctx.fillStyle = "#4a6078";
+      ctx.font = `500 38px ${font}`;
+      const bodyTop = 560;
+      const bodyH = wrapText(ctx, `完成「${title}」`, w / 2, bodyTop, w - 260, 56);
+      ctx.font = `600 40px ${font}`;
+      wrapText(ctx, `连续 ${task.goalDays} 天达成目标`, w / 2, bodyTop + bodyH + 18, w - 260, 58);
 
-      ctx.font = "34px PingFang SC, sans-serif";
-      wrapText(ctx, `完成「${task.title || "打卡挑战"}」`, w / 2, 450, w - 220, 52);
-      wrapText(ctx, `连续 ${task.goalDays} 天达成目标！`, w / 2, 540, w - 220, 52);
+      const rewardY = 820;
+      const badgeW = Math.min(720, w - 280);
+      const badgeX = (w - badgeW) / 2;
+      const badgeH = 168;
+      const badgeTop = rewardY - 78;
 
-      ctx.fillStyle = colors.main;
-      ctx.font = "bold 40px PingFang SC, sans-serif";
-      wrapText(ctx, `奖励：${task.reward || "神秘礼物"}`, w / 2, 680, w - 220, 56);
+      const badgeGrad = ctx.createLinearGradient(badgeX, badgeTop, badgeX + badgeW, badgeTop + badgeH);
+      badgeGrad.addColorStop(0, "#fff7d6");
+      badgeGrad.addColorStop(0.45, "#ffe9a0");
+      badgeGrad.addColorStop(1, "#ffd978");
+      ctx.fillStyle = badgeGrad;
+      roundRect(ctx, badgeX, badgeTop, badgeW, badgeH, 84);
+      ctx.fill();
 
-      ctx.fillStyle = "#ffd95c";
-      ctx.font = "64px serif";
-      ctx.fillText("★ ★ ★ ★ ★", w / 2, 820);
+      ctx.strokeStyle = "rgba(255, 196, 0, 0.75)";
+      ctx.lineWidth = 4;
+      roundRect(ctx, badgeX + 8, badgeTop + 8, badgeW - 16, badgeH - 16, 76);
+      ctx.stroke();
 
-      ctx.fillStyle = "#6b8199";
-      ctx.font = "28px PingFang SC, sans-serif";
-      const when = task.completedAt ? new Date(task.completedAt) : new Date();
-      ctx.fillText(`日期：${fmt(when)}`, w / 2, 960);
-      ctx.fillText(`爸爸妈妈为${name}骄傲`, w / 2, 1020);
+      ctx.fillStyle = "#ffd000";
+      ctx.font = `44px serif`;
+      ctx.fillText("★", badgeX + 56, rewardY + 18);
+      ctx.fillText("★", badgeX + badgeW - 56, rewardY + 18);
+
+      ctx.fillStyle = "#8a6a10";
+      ctx.font = `600 26px ${font}`;
+      ctx.fillText("✦  获得奖励  ✦", w / 2, rewardY - 22);
 
       ctx.fillStyle = colors.deep;
-      ctx.font = "bold 32px PingFang SC, sans-serif";
-      ctx.fillText(`${name}最棒，继续加油！`, w / 2, 1160);
+      ctx.font = `700 48px ${font}`;
+      wrapText(ctx, reward, w / 2, rewardY + 42, badgeW - 160, 56);
+
+      ctx.fillStyle = "#ffd000";
+      ctx.font = `64px serif`;
+      ctx.fillText("★  ★  ★  ★  ★", w / 2, 1020);
+
+      ctx.fillStyle = "#7a90a8";
+      ctx.font = `500 30px ${font}`;
+      ctx.fillText(`日期  ${fmt(when)}`, w / 2, 1140);
+      ctx.fillText(`爸爸妈妈为${name}骄傲`, w / 2, 1200);
+
+      ctx.fillStyle = colors.deep;
+      ctx.font = `700 36px ${font}`;
+      ctx.fillText(`${name}最棒，继续加油！`, w / 2, 1320);
+    }
+
+    function colorWithAlpha(hex, alpha) {
+      const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      if (!m) return hex;
+      return `rgba(${parseInt(m[1], 16)}, ${parseInt(m[2], 16)}, ${parseInt(m[3], 16)}, ${alpha})`;
     }
 
     function roundRect(ctx, x, y, w, h, r) {
@@ -924,6 +1301,7 @@
       }
       if (line) lines.push(line);
       lines.forEach((ln, idx) => ctx.fillText(ln, x, y + idx * lineHeight));
+      return Math.max(lines.length, 1) * lineHeight;
     }
 
     function burstConfetti() {
@@ -945,45 +1323,87 @@
       }, 3200);
     }
 
-    // events
+    function codeDigits(inputs) {
+      return Array.from(inputs).map((el) => el.value.replace(/\D/g, "").slice(-1)).join("");
+    }
+    function clearCodeBoxes(inputs) {
+      inputs.forEach((el) => { el.value = ""; });
+    }
+    function bindCodeBoxes(inputs, { onComplete, password = false } = {}) {
+      const list = Array.from(inputs);
+      list.forEach((input, idx) => {
+        if (password) input.type = "password";
+        input.addEventListener("input", () => {
+          const raw = input.value.replace(/\D/g, "");
+          if (raw.length > 1) {
+            const chars = raw.slice(0, list.length - idx).split("");
+            chars.forEach((ch, i) => { if (list[idx + i]) list[idx + i].value = ch; });
+            const next = list[Math.min(idx + chars.length, list.length - 1)];
+            next.focus();
+          } else {
+            input.value = raw.slice(-1);
+            if (input.value && list[idx + 1]) list[idx + 1].focus();
+          }
+          const code = codeDigits(list);
+          if (code.length === list.length && onComplete) onComplete(code);
+        });
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Backspace" && !input.value && list[idx - 1]) {
+            list[idx - 1].focus();
+            list[idx - 1].value = "";
+            e.preventDefault();
+          }
+        });
+        input.addEventListener("focus", () => input.select());
+      });
+    }
+
+    function openLockModal() {
+      const boxes = document.querySelectorAll(".lock-digit");
+      const wrap = document.getElementById("lockBoxes");
+      document.getElementById("lockError").textContent = "";
+      wrap.classList.remove("shake");
+      clearCodeBoxes(boxes);
+      document.getElementById("lockModal").classList.remove("hidden");
+      setTimeout(() => boxes[0]?.focus(), 50);
+    }
+    function closeLockModal() {
+      document.getElementById("lockModal").classList.add("hidden");
+      clearCodeBoxes(document.querySelectorAll(".lock-digit"));
+      document.getElementById("lockError").textContent = "";
+    }
+    function tryUnlock(code) {
+      if (code === (state.lockCode || DEFAULT_LOCK_CODE)) {
+        parentUnlocked = true;
+        closeLockModal();
+        mode = "parent";
+        render();
+        return;
+      }
+      const wrap = document.getElementById("lockBoxes");
+      const boxes = document.querySelectorAll(".lock-digit");
+      document.getElementById("lockError").textContent = "密码不对，再试一次";
+      wrap.classList.remove("shake");
+      void wrap.offsetWidth;
+      wrap.classList.add("shake");
+      clearCodeBoxes(boxes);
+      boxes[0].focus();
+    }
+
     document.getElementById("btnChild").onclick = () => { mode = "child"; render(); };
     document.getElementById("btnParent").onclick = () => {
       if (parentUnlocked) { mode = "parent"; render(); return; }
-      pinBuffer = "";
-      updatePinDots();
-      document.getElementById("pinModal").classList.remove("hidden");
+      openLockModal();
     };
-
-    document.getElementById("pinPad").onclick = (e) => {
-      const btn = e.target.closest("button");
-      if (!btn) return;
-      const k = btn.getAttribute("data-k");
-      if (k === "cancel") {
-        document.getElementById("pinModal").classList.add("hidden");
-        pinBuffer = "";
-        return;
-      }
-      if (k === "del") { pinBuffer = pinBuffer.slice(0, -1); updatePinDots(); return; }
-      if (pinBuffer.length >= 4) return;
-      pinBuffer += k;
-      updatePinDots();
-      if (pinBuffer.length === 4) {
-        if (pinBuffer === (state.pin || "1234")) {
-          parentUnlocked = true;
-          document.getElementById("pinModal").classList.add("hidden");
-          mode = "parent";
-          pinBuffer = "";
-          render();
-        } else {
-          pinBuffer = "";
-          updatePinDots();
-          alert("PIN 不正确");
-        }
-      }
-    };
-    function updatePinDots() {
-      document.querySelectorAll("#pinDots i").forEach((d, i) => d.classList.toggle("on", i < pinBuffer.length));
-    }
+    document.getElementById("lockCancel").onclick = closeLockModal;
+    document.getElementById("lockModal").addEventListener("click", (e) => {
+      if (e.target.id === "lockModal") closeLockModal();
+    });
+    bindCodeBoxes(document.querySelectorAll(".lock-digit"), {
+      password: true,
+      onComplete: tryUnlock,
+    });
+    bindCodeBoxes(document.querySelectorAll(".lock-set-digit"), { password: true });
 
     document.getElementById("themeGrid").onclick = (e) => {
       const chip = e.target.closest(".theme-chip");
@@ -994,13 +1414,11 @@
 
     document.getElementById("saveProfile").onclick = () => {
       state.profile = {
-        nickname: document.getElementById("babyName").value.trim(),
-        gender: document.getElementById("babyGender").value,
-        age: document.getElementById("babyAge").value.trim(),
+        nickname: document.getElementById("babyName").value.trim() || DEFAULT_NICKNAME,
       };
       save();
       updateChromeCopy();
-      alert("宝宝设置已保存");
+      toast("宝宝设置已保存");
       render();
     };
 
@@ -1016,14 +1434,15 @@
       state.task = { title, reward, startDate, goalDays, marks: keepMarks, completedAt: null };
       ensureCompleteFlag();
       save();
-      alert("任务已保存");
+      toast("任务已保存");
       render();
     };
 
-    document.getElementById("resetAll").onclick = () => {
-      if (!confirm("确定清空全部任务与打卡记录？宝宝设置与皮肤会保留。")) return;
+    document.getElementById("resetAll").onclick = async () => {
+      const ok = await askConfirm("确定清空全部任务与打卡记录？宝宝设置与皮肤会保留。");
+      if (!ok) return;
       const keep = {
-        pin: state.pin,
+        lockCode: state.lockCode,
         theme: state.theme,
         profile: state.profile,
       };
@@ -1031,20 +1450,28 @@
       save();
       parentUnlocked = true;
       render();
+      toast("已清空任务与打卡记录");
     };
 
-    document.getElementById("savePin").onclick = () => {
-      const v = document.getElementById("pinInput").value.trim();
-      if (!/^\d{4}$/.test(v)) return alert("请输入 4 位数字");
-      state.pin = v;
+    document.getElementById("saveLock").onclick = () => {
+      const v = codeDigits(document.querySelectorAll(".lock-set-digit"));
+      if (!/^\d{4}$/.test(v)) return toast("请输入完整的 4 位数字", "warn");
+      state.lockCode = v;
       save();
-      alert("PIN 已更新");
+      clearCodeBoxes(document.querySelectorAll(".lock-set-digit"));
+      toast("童锁已更新");
     };
+
+    document.getElementById("askCancel").onclick = () => closeAsk(false);
+    document.getElementById("askOk").onclick = () => closeAsk(true);
+    document.getElementById("askMask").addEventListener("click", (e) => {
+      if (e.target.id === "askMask") closeAsk(false);
+    });
 
     document.getElementById("fillAllOk").onclick = fillAllOk;
     document.getElementById("clearAllMarks").onclick = clearAllMarks;
     document.getElementById("previewCert").onclick = () => {
-      if (!state.task) return alert("请先保存任务");
+      if (!state.task) return toast("请先保存任务", "warn");
       showCertificate(false);
     };
     document.getElementById("closeCert").onclick = () => {
