@@ -134,14 +134,37 @@
       letter-spacing: 0.01em;
       display: flex;
       flex-direction: column;
+      box-sizing: border-box;
     }
     @media (min-width: 768px) {
-      html { font-size: 17px; }
-      body { padding: calc(16px + var(--safe-top)) 20px calc(16px + var(--safe-bottom)); }
+      html {
+        font-size: 17px;
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        height: 100%;
+        height: 100dvh;
+        max-height: 100dvh;
+        min-height: 0;
+        overflow: hidden;
+        padding: calc(12px + var(--safe-top)) 16px calc(12px + var(--safe-bottom));
+      }
+      .app {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .topbar { margin-bottom: 8px; }
+      #childView {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+      }
     }
     @media (min-width: 1100px) {
       html { font-size: 18px; }
-      body { padding: calc(18px + var(--safe-top)) 24px calc(18px + var(--safe-bottom)); }
+      body { padding: calc(14px + var(--safe-top)) 20px calc(14px + var(--safe-bottom)); }
     }
     body::before, body::after {
       content: "";
@@ -187,19 +210,69 @@
     }
     #childView { overflow: hidden; }
     #parentView {
+      overflow-x: hidden;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: 4px;
+      /* 白底做在滚动容器上，并向下吃掉 body 底 padding，避免底部露蓝 */
+      background: #fff;
+      border: 1px solid var(--line);
+      border-bottom: 0;
+      border-radius: var(--radius) var(--radius) 0 0;
+      box-shadow: var(--shadow);
+      margin-bottom: calc(-1 * (12px + var(--safe-bottom)));
+      padding-bottom: calc(16px + var(--safe-bottom));
+      min-height: 0;
+      /* 保留滚动，隐藏滚动条样式 */
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
-    #childView > .card,
-    #parentView > .card { margin-top: 0; }
+    #parentView::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+      display: none;
+    }
+    @media (min-width: 768px) {
+      #parentView {
+        margin-bottom: calc(-1 * (12px + var(--safe-bottom)));
+        padding-bottom: calc(20px + var(--safe-bottom));
+      }
+    }
+    @media (min-width: 1100px) {
+      #parentView {
+        margin-bottom: calc(-1 * (14px + var(--safe-bottom)));
+        padding-bottom: calc(22px + var(--safe-bottom));
+      }
+    }
+    #childView > .card {
+      margin-top: 0;
+      background: #fff;
+      overflow: visible;
+    }
+    #parentView > .card {
+      margin-top: 0;
+      /* 外层已有白底圆角，内层卡片去壳，避免「白底半截」 */
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      border-radius: 0;
+      flex: 1 0 auto;
+      min-height: 100%;
+      height: auto;
+      overflow: visible;
+    }
+    /* 家长端卡槽按内容高度，避免正方形被裁切露出蓝底 */
+    #parentView .day {
+      aspect-ratio: auto;
+      min-height: 100px;
+      height: auto;
+    }
     #childView > .stars-panel {
       display: flex;
       flex-direction: column;
       min-height: 0;
     }
 
-    /* 手机竖屏：尽量利用首屏，星星区吃剩余高度 */
+    /* 手机竖屏：星星区吃剩余高度，卡槽铺满 */
     @media (max-width: 767px) and (orientation: portrait) {
       #childView > .stars-panel {
         flex: 1 1 auto;
@@ -207,106 +280,189 @@
       }
       #childView > .stars-panel .days {
         flex: 1;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        grid-template-rows: repeat(2, minmax(0, 1fr));
         gap: 8px;
         min-height: 168px;
       }
       #childView .day {
-        aspect-ratio: auto;
         height: 100%;
-        min-height: 0;
+        padding: 8px 4px 30px;
       }
     }
 
-    /* iPad / 桌面竖屏：上下分区铺满 */
+    /* iPad / 桌面竖屏：上下分区铺满，无首屏滚动 */
     @media (min-width: 768px) and (orientation: portrait) {
-      #childView { gap: 16px; }
-      #childView > .hero { flex: 0 1 auto; }
+      #childView {
+        gap: 12px;
+        overflow: hidden;
+      }
+      #childView > .hero {
+        flex: 0 1 auto;
+        max-height: 42%;
+        min-height: 0;
+        overflow: hidden;
+      }
       #childView > .stars-panel {
         flex: 1 1 auto;
         min-height: 0;
+        overflow: hidden;
       }
       #childView > .stars-panel .days {
         flex: 1;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        grid-template-rows: repeat(2, minmax(0, 1fr));
-        gap: 14px;
+        gap: 10px;
         min-height: 0;
+        overflow: hidden;
       }
       .hero {
         grid-template-columns: 1.15fr 0.95fr;
         align-items: stretch;
       }
-      .ring { width: clamp(180px, 22vw, 240px); height: clamp(180px, 22vw, 240px); }
-      #childView .day { aspect-ratio: auto; min-height: 0; height: 100%; }
+      .ring { width: clamp(150px, 18vw, 210px); height: clamp(150px, 18vw, 210px); }
+      #childView .day {
+        padding: 8px 4px 28px;
+      }
+      #childView .day .icon { font-size: clamp(2.4rem, 40cqi, 3.6rem); }
+      #childView .day .n { font-size: clamp(1.5rem, 28cqi, 2.1rem); }
+      #childView .day-date { font-size: clamp(0.72rem, 11cqi, 0.9rem); }
     }
 
-    /* 小平板横屏 */
+    /* 小平板横屏：整屏铺满，禁止首屏外溢 */
     @media (min-width: 768px) and (max-width: 899px) and (orientation: landscape) {
       #childView {
         display: grid;
         grid-template-columns: 1fr 1fr;
         grid-template-rows: minmax(0, 1fr);
-        gap: 12px;
+        gap: 10px;
+        min-height: 0;
+        overflow: hidden;
       }
       #childView > .hero,
-      #childView > .stars-panel { height: 100%; min-height: 0; }
-      .hero { grid-template-columns: 1fr; height: 100%; }
-      .progress-ring-wrap { height: 100%; }
-      #childView .days {
-        flex: 1;
-        grid-template-rows: repeat(2, minmax(0, 1fr));
+      #childView > .stars-panel {
         height: 100%;
-        gap: 10px;
+        min-height: 0;
+        overflow: hidden;
       }
-      #childView .day { aspect-ratio: auto; height: 100%; }
-      .ring { width: clamp(140px, 20vw, 180px); height: clamp(140px, 20vw, 180px); }
+      #childView .hero {
+        display: flex;
+        flex-direction: column;
+        grid-template-columns: unset;
+        grid-template-rows: unset;
+        height: 100%;
+        gap: 8px;
+        padding: 12px;
+      }
+      #childView .progress-ring-wrap {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto;
+        width: 100%;
+        justify-content: center;
+      }
+      #childView .hero .ring {
+        width: min(88%, 32dvh, 220px);
+        height: min(88%, 32dvh, 220px);
+      }
+      #childView .hero .ring .center strong {
+        font-size: clamp(1.6rem, 4.5vh, 2.2rem);
+      }
+      #childView .days {
+        height: 100%;
+        min-height: 0;
+        gap: 8px;
+        overflow: hidden;
+      }
+      #childView .day {
+        padding: 6px 4px 26px;
+      }
+      #childView .day .icon { font-size: clamp(1.9rem, 34cqi, 2.6rem); }
+      #childView .day .n { font-size: clamp(1.2rem, 22cqi, 1.55rem); }
+      #childView .day-date { font-size: clamp(0.64rem, 11cqi, 0.8rem); }
     }
 
-    /* 横屏平板 / 宽屏：左右分栏铺满 */
+    /* 横屏平板 / 宽屏：左右分栏铺满，首屏无滚动 */
     @media (min-width: 900px) and (orientation: landscape), (min-width: 1200px) {
       #childView {
         display: grid;
-        grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.1fr);
         grid-template-rows: minmax(0, 1fr);
-        gap: 16px;
+        gap: 12px;
         align-items: stretch;
+        min-height: 0;
+        overflow: hidden;
       }
       #childView > .hero,
       #childView > .stars-panel {
         height: 100%;
         min-height: 0;
         flex: unset;
+        overflow: hidden;
       }
-      .hero {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto minmax(0, 1fr);
+      #childView .hero {
+        display: flex;
+        flex-direction: column;
+        grid-template-columns: unset;
+        grid-template-rows: unset;
         height: 100%;
+        gap: 10px;
+        padding: 14px;
       }
-      .progress-ring-wrap { min-height: 0; height: 100%; }
-      .ring { width: clamp(170px, 18vw, 230px); height: clamp(170px, 18vw, 230px); }
-      #childView > .stars-panel .days {
-        flex: 1;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        grid-template-rows: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-        height: 100%;
+      #childView .hero > :first-child {
+        flex: 0 1 auto;
         min-height: 0;
       }
-      #childView .day { aspect-ratio: auto; height: 100%; min-height: 0; }
-
-      #parentView {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-auto-rows: minmax(0, auto);
-        gap: 16px;
-        align-content: start;
+      #childView .progress-ring-wrap {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto;
+        width: 100%;
+        justify-content: center;
+        gap: 6px;
       }
-      #parentView > .card:first-child,
-      #parentView > .card:nth-child(4) { grid-column: 1 / -1; }
+      #childView .hero .ring {
+        width: min(90%, 34dvh, 280px);
+        height: min(90%, 34dvh, 280px);
+      }
+      #childView .hero .ring .center strong {
+        font-size: clamp(1.85rem, 5vh, 2.6rem);
+      }
+      #childView .hero .ring .center span {
+        font-size: clamp(0.88rem, 2vh, 1.05rem);
+      }
+      #childView > .stars-panel {
+        padding: 14px;
+      }
+      #childView > .stars-panel .section-head {
+        margin-bottom: 8px;
+      }
+      #childView > .stars-panel .days {
+        height: 100%;
+        min-height: 0;
+        gap: 10px;
+        overflow: hidden;
+      }
+      #childView .day {
+        padding: 8px 4px 28px;
+      }
+      #childView .day .icon { font-size: clamp(2.1rem, 36cqi, 3.2rem); }
+      #childView .day .n { font-size: clamp(1.35rem, 24cqi, 1.9rem); }
+      #childView .day-date { font-size: clamp(0.68rem, 11cqi, 0.86rem); }
+
+      /* 家长端保持纵向滚动，卡片随内容撑开 */
+      #parentView {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      #parentView > .card.span-all {
+        flex: 1 0 auto;
+        width: 100%;
+      }
       #parentView .days {
         grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+      #parentView .day {
+        aspect-ratio: auto;
+        min-height: 108px;
+        height: auto;
       }
     }
 
@@ -325,34 +481,94 @@
       .hero { gap: 8px; }
       .ring { width: 110px; height: 110px; }
       #childView .days {
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        grid-template-rows: repeat(2, minmax(0, 1fr));
         height: 100%;
         gap: 6px;
       }
-      #childView .day { aspect-ratio: auto; height: 100%; border-radius: 12px; gap: 1px; }
+      #childView .day {
+        border-radius: 14px;
+        padding: 4px 2px 20px;
+      }
+      #childView .day .icon { font-size: clamp(1.75rem, 38cqi, 2.35rem); }
+      #childView .day .n { font-size: clamp(1.15rem, 24cqi, 1.5rem); }
+      #childView .day-date { font-size: clamp(0.62rem, 11cqi, 0.78rem); bottom: 5px; }
       .card { padding: 12px; border-radius: 18px; }
     }
 
     .topbar {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 12px; margin-bottom: 12px; flex-shrink: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      grid-template-areas: "brand actions settings";
+      align-items: start;
+      gap: 10px 12px;
+      margin-bottom: 12px;
+      flex-shrink: 0;
     }
+    .brand { grid-area: brand; }
+    .topbar-actions {
+      grid-area: actions;
+      display: flex; align-items: center; gap: 8px;
+      flex-wrap: wrap; justify-content: flex-end;
+      min-width: 0;
+      align-self: start;
+    }
+    .topbar-settings {
+      grid-area: settings;
+      width: 40px; height: 40px; padding: 0;
+      border: 0; background: transparent;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: color-mix(in srgb, var(--ink) 72%, var(--muted));
+      cursor: pointer; box-shadow: none;
+      font-family: inherit;
+      justify-self: end;
+      align-self: start;
+      flex-shrink: 0;
+      box-sizing: border-box;
+    }
+    .topbar-settings svg {
+      width: 26px; height: 26px; display: block;
+    }
+    .topbar-settings:active { transform: scale(0.96); }
+    .topbar-handoff {
+      border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--line));
+      border-radius: 999px; padding: 0 14px; height: 40px;
+      font-size: var(--fs-sm); font-weight: 700;
+      color: var(--primary); cursor: pointer;
+      font-family: inherit; flex-shrink: 0;
+      background: color-mix(in srgb, var(--primary) 10%, var(--card));
+      box-shadow: none;
+    }
+    .topbar-handoff:active { transform: scale(0.98); }
+    .drawer-section-title {
+      display: block; margin: 4px 0 10px;
+      font-size: var(--fs-md); font-weight: 700; color: var(--ink);
+    }
+    .drawer-section + .drawer-section {
+      margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line);
+    }
+    .brand { min-width: 0; }
     .brand h1 {
       margin: 0; font-size: clamp(1.28rem, 2.6vw, 1.72rem);
       font-weight: 700; letter-spacing: 0.02em; line-height: var(--lh-tight);
+      min-width: 0;
     }
     .brand p {
       margin: 4px 0 0; color: var(--muted);
       font-size: var(--fs-sm); line-height: 1.4;
     }
     .mode-switch {
-      display: inline-flex; background: var(--card); border: 1px solid var(--line);
-      border-radius: 999px; padding: 4px; box-shadow: var(--shadow); flex-shrink: 0;
+      display: inline-flex; align-items: center;
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 999px; padding: 3px; height: 40px;
+      box-shadow: var(--shadow); flex-shrink: 0; box-sizing: border-box;
     }
     .mode-switch button {
-      border: 0; background: transparent; padding: 9px 16px; border-radius: 999px;
+      border: 0; background: transparent; padding: 0 14px; height: 34px;
+      border-radius: 999px;
       font-size: var(--fs-sm); font-weight: 600; color: var(--muted); cursor: pointer;
+      font-family: inherit;
     }
     .mode-switch button.active {
       background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 85%, white), var(--primary));
@@ -361,8 +577,12 @@
     }
 
     .card {
-      background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
-      box-shadow: var(--shadow); padding: 16px; backdrop-filter: blur(8px);
+      /* 实心白底：避免 iPad 滚动时半透明+blur 把背景裁成半截 */
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
     }
     @media (min-width: 768px) {
       .card { padding: 20px; }
@@ -372,7 +592,8 @@
       font-size: var(--fs-lg); font-weight: 700; letter-spacing: 0.01em; line-height: var(--lh-tight);
     }
     .section-head {
-      display: flex; justify-content: space-between; align-items: baseline;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap;
       gap: 10px; margin-bottom: 12px; flex-shrink: 0;
     }
     .section-head .meta {
@@ -399,8 +620,441 @@
     .progress-ring-wrap {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 10px; padding: 8px 0 4px;
+      min-height: 0;
     }
     .ring-caption { color: var(--muted); font-size: var(--fs-sm); font-weight: 500; }
+    .side-stat {
+      margin-top: 6px; text-align: center;
+      color: var(--muted); font-size: var(--fs-xs); font-weight: 500; line-height: 1.4;
+      min-height: 1.2em;
+    }
+    .mode-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 999px;
+      background: color-mix(in srgb, var(--primary) 14%, white);
+      color: var(--primary-deep); font-size: var(--fs-xs); font-weight: 700;
+    }
+    .mode-badge.lucky {
+      background: linear-gradient(120deg, #fff3c4, #ffe08a);
+      color: #8a6a10;
+    }
+    .choice-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;
+    }
+    .choice-chip {
+      border: 2px solid var(--line); border-radius: 14px; padding: 12px 10px;
+      background: #fff; cursor: pointer; text-align: left;
+      font-family: inherit; color: var(--ink);
+    }
+    .choice-chip strong { display: block; font-size: var(--fs-sm); margin-bottom: 4px; }
+    .choice-chip span { display: block; font-size: var(--fs-xs); color: var(--muted); line-height: 1.4; font-weight: 500; }
+    .choice-chip.active {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent);
+      background: color-mix(in srgb, var(--primary) 8%, white);
+    }
+    .task-summary {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+      margin-bottom: 12px;
+    }
+    .task-summary .title {
+      font-size: var(--fs-lg); font-weight: 700; line-height: var(--lh-tight); flex: 1 1 auto;
+    }
+    .task-list { display: grid; gap: 10px; }
+    .task-item {
+      border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px;
+      background: #fff; display: grid; gap: 8px;
+    }
+    .task-item .row {
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+    }
+    .task-item .name { font-weight: 700; font-size: var(--fs-md); line-height: 1.3; }
+    .task-item .meta { color: var(--muted); font-size: var(--fs-xs); line-height: 1.4; }
+    .task-item .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .task-item .actions .btn { flex: 1 1 auto; padding: 10px 12px; font-size: var(--fs-sm); }
+    .status-pill {
+      flex-shrink: 0; padding: 2px 8px; border-radius: 999px;
+      font-size: 0.72rem; font-weight: 700;
+      background: color-mix(in srgb, var(--primary) 12%, white); color: var(--primary-deep);
+    }
+    .status-pill.done { background: #fff3c4; color: #8a6a10; }
+    .status-pill.archived { background: #eef2f6; color: #6b8199; }
+    .inline-fields {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    @media (max-width: 520px) {
+      .inline-fields { grid-template-columns: 1fr; }
+      .choice-row { grid-template-columns: 1fr; }
+    }
+    .modal.wide { width: min(440px, 100%); text-align: left; }
+    .modal.wide h3 { text-align: center; }
+    .modal.wide > .hint { text-align: center; }
+    .modal-actions.pair { display: flex; gap: 10px; margin-top: 4px; }
+    .modal-actions.pair .btn { flex: 1; min-width: 0; }
+    .section-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    /*
+      新建任务：底部抽屉
+      历史任务 / 设置：全屏面板
+    */
+    .drawer-mask {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 80;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0;
+      background: rgba(20, 30, 34, 0.38);
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: flex-end !important;
+      align-items: stretch !important;
+      place-items: unset !important;
+    }
+    .drawer-mask.hidden { display: none !important; }
+    .drawer-mask > .drawer {
+      position: relative !important;
+      left: auto !important;
+      right: auto !important;
+      top: auto !important;
+      bottom: auto !important;
+      transform: none !important;
+      width: 100% !important;
+      max-width: none !important;
+      height: auto !important;
+      max-height: 78vh !important;
+      min-height: 0;
+      margin: 0 !important;
+      background: #fff;
+      border-radius: 20px 20px 0 0 !important;
+      box-shadow: 0 -12px 40px rgba(36, 58, 85, 0.2);
+      text-align: left;
+      display: flex !important;
+      flex-direction: column;
+      padding: 6px 16px calc(14px + var(--safe-bottom));
+      box-sizing: border-box;
+      overflow: hidden;
+      flex: 0 1 auto;
+    }
+    @supports (height: 1dvh) {
+      .drawer-mask > .drawer { max-height: 78dvh !important; }
+    }
+    .drawer-mask.page-mask {
+      justify-content: stretch !important;
+      background: var(--bg1);
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+    .drawer-mask.page-mask > .drawer {
+      flex: 1 1 auto !important;
+      height: auto !important;
+      max-height: 100% !important;
+      min-height: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none;
+      padding: calc(6px + var(--safe-top)) 12px calc(14px + var(--safe-bottom));
+      background: linear-gradient(180deg, color-mix(in srgb, var(--blob2) 55%, #fff), #fff 28%);
+      overflow: hidden;
+    }
+    /* 打开全屏面板时锁住底层页面滚动，避免露出页面滚动条 */
+    html.page-panel-open,
+    html.page-panel-open body {
+      overflow: hidden !important;
+      overscroll-behavior: none;
+      touch-action: none;
+    }
+    html.page-panel-open .drawer-mask.page-mask,
+    html.page-panel-open .drawer-mask.page-mask .drawer-body {
+      touch-action: pan-y;
+    }
+    .drawer-handle {
+      width: 44px; height: 5px; border-radius: 999px;
+      background: color-mix(in srgb, var(--muted) 35%, #fff);
+      margin: 4px auto 12px; flex-shrink: 0;
+    }
+    .page-toolbar {
+      display: grid;
+      grid-template-columns: minmax(96px, auto) 1fr minmax(96px, auto);
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      margin: 0 0 10px;
+      min-height: 52px;
+      width: 100%;
+    }
+    .page-back {
+      justify-self: start;
+      border: 0;
+      background: transparent;
+      color: var(--primary-deep);
+      font-family: inherit;
+      font-size: 1.12rem;
+      font-weight: 700;
+      padding: 8px 10px 8px 0;
+      border-radius: 12px;
+      cursor: pointer;
+      line-height: 1;
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: -4px;
+    }
+    .page-back-icon {
+      width: 1.55em;
+      height: 1.55em;
+      display: block;
+      flex-shrink: 0;
+    }
+    .page-back:active { transform: scale(0.97); opacity: 0.85; }
+    .page-toolbar h3 {
+      margin: 0;
+      text-align: center;
+      font-size: var(--fs-xl);
+      font-weight: 700;
+    }
+    .drawer-head { flex-shrink: 0; text-align: center; margin-bottom: 4px; }
+    .drawer-head h3 { margin: 0 0 6px; font-size: var(--fs-xl); font-weight: 700; }
+    .drawer-head .hint { margin: 0 0 12px; }
+    .page-mask .drawer-head { text-align: left; }
+    .page-mask .drawer-head .hint { margin: 0 0 14px; }
+    .drawer-body {
+      flex: 1 1 auto; min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      padding: 2px 2px 8px;
+      scrollbar-width: thin;
+    }
+    .page-mask .drawer-body {
+      /* 内容未溢出时不强制占滚动槽 */
+      scrollbar-gutter: auto;
+    }
+    .drawer-body .task-list { gap: 12px; }
+    .drawer-foot {
+      flex-shrink: 0; padding-top: 10px;
+      border-top: 1px solid var(--line);
+      display: flex; justify-content: center; width: 100%;
+    }
+    .drawer-foot .btn { min-width: 120px; }
+
+    /* iPad / 平板：历史与设置全屏页居中可读区 + 更大触控 */
+    @media (min-width: 768px) {
+      .topbar-settings { width: 42px; height: 40px; }
+      .topbar-settings svg { width: 28px; height: 28px; }
+      .page-toolbar {
+        grid-template-columns: minmax(120px, auto) 1fr minmax(120px, auto);
+        min-height: 56px;
+        margin-bottom: 16px;
+        width: 100%;
+      }
+      .page-back {
+        font-size: 1.28rem;
+        padding: 10px 12px 10px 0;
+        min-height: 52px;
+        margin-left: -6px;
+      }
+      .page-back-icon {
+        width: 1.7em;
+        height: 1.7em;
+      }
+      .page-toolbar h3 { font-size: clamp(1.35rem, 2.2vw, 1.6rem); }
+      .drawer-mask.page-mask > .drawer {
+        padding: calc(10px + var(--safe-top)) 20px calc(22px + var(--safe-bottom));
+      }
+      /* 顶栏贴左，正文居中限宽，避免返回按钮被挤到中间列 */
+      .page-mask .drawer-head,
+      .page-mask .drawer-body,
+      .page-mask .drawer-foot {
+        width: min(860px, 100%);
+        margin-left: auto;
+        margin-right: auto;
+      }
+      #settingsDrawer .drawer-head,
+      #settingsDrawer .drawer-body,
+      #settingsDrawer .drawer-foot {
+        width: min(640px, 100%);
+      }
+      .page-mask .drawer-head .hint {
+        font-size: var(--fs-md);
+        max-width: 42em;
+      }
+      .page-mask .drawer-section-title {
+        font-size: 1.15rem;
+        margin-bottom: 14px;
+      }
+      .page-mask .drawer-section + .drawer-section {
+        margin-top: 28px;
+        padding-top: 24px;
+      }
+      .page-mask .drawer-body .task-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .page-mask .task-list > .empty {
+        grid-column: 1 / -1;
+      }
+      .page-mask .task-item {
+        padding: 18px 18px;
+        border-radius: 18px;
+        gap: 12px;
+        height: 100%;
+        box-sizing: border-box;
+      }
+      .page-mask .task-item .name { font-size: 1.08rem; }
+      .page-mask .task-item .meta { font-size: var(--fs-sm); }
+      .page-mask .task-item .actions .btn {
+        padding: 12px 14px;
+        font-size: var(--fs-md);
+      }
+      .page-mask label.field {
+        margin-bottom: 18px;
+        font-size: var(--fs-md);
+      }
+      .page-mask label.field input,
+      .page-mask label.field textarea,
+      .page-mask label.field select {
+        padding: 15px 16px;
+        border-radius: 14px;
+        font-size: 1.05rem;
+      }
+      .page-mask .theme-grid {
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .page-mask .theme-chip {
+        padding: 14px 8px;
+        border-radius: 16px;
+        font-size: var(--fs-sm);
+      }
+      .page-mask .theme-dot {
+        width: 22px; height: 22px; margin-bottom: 8px;
+      }
+      .page-mask .drawer-foot {
+        padding-top: 16px;
+      }
+      .page-mask .drawer-foot .btn {
+        min-width: 180px;
+        padding: 14px 22px;
+        font-size: var(--fs-md);
+      }
+      .page-mask .btn-row .btn {
+        padding: 14px 18px;
+        font-size: var(--fs-md);
+      }
+    }
+    @media (min-width: 1100px) {
+      .page-mask .drawer-head,
+      .page-mask .drawer-body,
+      .page-mask .drawer-foot {
+        width: min(980px, 100%);
+      }
+      #settingsDrawer .drawer-head,
+      #settingsDrawer .drawer-body,
+      #settingsDrawer .drawer-foot {
+        width: min(680px, 100%);
+      }
+      .page-mask .drawer-body .task-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+    }
+    .status-banner.lucky {
+      background: linear-gradient(120deg, #fff6d0, color-mix(in srgb, var(--primary) 16%, white));
+      color: #8a6a10; font-weight: 700;
+    }
+    .surprise-egg {
+      display: inline-flex; align-items: center; gap: 10px;
+      margin-top: 12px; padding: 10px 14px 10px 10px;
+      border: 0; border-radius: 999px; cursor: pointer;
+      background: linear-gradient(120deg, #fff8d6, #ffe89a);
+      box-shadow: 0 8px 20px rgba(255, 196, 0, 0.35);
+      color: #8a6a10; font-weight: 700; font-size: var(--fs-sm);
+      font-family: inherit; line-height: 1.2;
+      animation: egg-bounce 1.8s ease-in-out infinite;
+    }
+    .surprise-egg img {
+      width: 42px; height: 42px; border-radius: 50%;
+      display: block; background: #dff0ff;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.9);
+    }
+    .surprise-egg:active { transform: scale(0.96); animation: none; }
+    @keyframes egg-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    .gift-show { display: none; position: relative; z-index: 2; width: 100%; height: 100%; }
+    .star-celeb.mascot .big-star { display: none !important; }
+    .star-celeb.mascot .gift-show { display: block; }
+    .star-celeb.mascot .stage { width: min(92vw, 440px); height: min(78vw, 420px); }
+    .gift-scene {
+      position: absolute; inset: 0;
+      display: grid; place-items: end center;
+      perspective: 900px;
+    }
+    .gift-box {
+      position: relative; width: 168px; height: 118px; margin-bottom: 28px;
+      transform-style: preserve-3d;
+      transform: rotateX(12deg);
+    }
+    .gift-body {
+      position: absolute; inset: 28px 0 0;
+      background: linear-gradient(160deg, #ff8fb4, #ef4f86 55%, #d4326c);
+      border-radius: 10px 10px 16px 16px;
+      box-shadow:
+        inset 0 10px 0 rgba(255,255,255,0.28),
+        0 14px 0 #b42358,
+        0 22px 28px rgba(90, 20, 40, 0.28);
+    }
+    .gift-body::before, .gift-body::after {
+      content: ""; position: absolute; background: #ffe27a;
+    }
+    .gift-body::before { left: 50%; top: 0; bottom: 0; width: 22px; transform: translateX(-50%); }
+    .gift-body::after { top: 42%; left: 0; right: 0; height: 16px; }
+    .gift-lid {
+      position: absolute; left: -10px; right: -10px; top: 0; height: 42px;
+      background: linear-gradient(180deg, #ffb3cc, #ff6f9d);
+      border-radius: 10px;
+      transform-origin: 50% 0%;
+      transform-style: preserve-3d;
+      box-shadow: 0 8px 0 #e25586, inset 0 6px 0 rgba(255,255,255,0.35);
+    }
+    .gift-lid::before {
+      content: ""; position: absolute; left: 50%; top: -16px; width: 28px; height: 28px;
+      transform: translateX(-50%);
+      background: radial-gradient(circle at 35% 35%, #fff6c2, #ffd000 60%, #e6a800);
+      border-radius: 50% 50% 50% 0;
+      box-shadow: 18px 2px 0 -4px #ffd000, -18px 2px 0 -4px #ffd000;
+    }
+    .pop-star {
+      position: absolute; left: 50%; bottom: 118px; width: 168px; height: 168px;
+      margin-left: -84px; transform-origin: 50% 80%;
+      opacity: 0;
+      filter: drop-shadow(0 16px 18px rgba(180, 110, 0, 0.35));
+    }
+    .pop-star svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    .star-celeb.mascot.playing .gift-box { animation: gift-in 0.45s ease both; }
+    .star-celeb.mascot.playing .gift-lid { animation: lid-open 0.7s 0.42s cubic-bezier(.2,.7,.2,1) forwards; }
+    .star-celeb.mascot.playing .pop-star {
+      animation: star-pop 1.15s 0.72s cubic-bezier(.16,1.25,.32,1) forwards, star-float 1.5s 1.9s ease-in-out infinite;
+    }
+    @keyframes gift-in {
+      from { transform: rotateX(12deg) translateY(24px) scale(0.86); opacity: 0; }
+      to { transform: rotateX(12deg) translateY(0) scale(1); opacity: 1; }
+    }
+    @keyframes lid-open {
+      from { transform: rotateX(0deg); }
+      to { transform: translateY(-10px) rotateX(-128deg); }
+    }
+    @keyframes star-pop {
+      0% { opacity: 0; transform: translateY(46px) scale(0.12) rotateX(50deg) rotateY(-40deg); }
+      62% { opacity: 1; transform: translateY(-36px) scale(1.12) rotateX(-10deg) rotateY(16deg); }
+      100% { opacity: 1; transform: translateY(-18px) scale(1) rotateX(0deg) rotateY(0deg); }
+    }
+    @keyframes star-float {
+      0%, 100% { transform: translateY(-18px) rotateY(-8deg); }
+      50% { transform: translateY(-30px) rotateY(10deg); }
+    }
     .ring { width: clamp(140px, 38vw, 180px); height: clamp(140px, 38vw, 180px); position: relative; }
     .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
     .ring .bg { stroke: color-mix(in srgb, var(--primary) 18%, transparent); }
@@ -424,18 +1078,167 @@
     .day {
       aspect-ratio: 1; border-radius: 16px; border: 2px solid var(--line); background: #fff;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 3px; padding: 6px 4px; position: relative; min-width: 0;
+      gap: clamp(4px, 3.2cqi, 10px); padding: clamp(10px, 6cqi, 16px) 8px clamp(8px, 4.5cqi, 12px);
+      position: relative; min-width: 0;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
+      container-type: inline-size;
     }
     .day .n {
-      font-size: clamp(0.72rem, 1.6vw, 0.9rem); color: var(--muted);
-      font-weight: 600; line-height: 1.1;
+      font-size: clamp(0.8rem, 13cqi, 1.12rem); color: var(--ink);
+      font-weight: 700; line-height: 1.15;
     }
-    .day .d {
-      font-size: clamp(0.66rem, 1.4vw, 0.8rem);
-      color: color-mix(in srgb, var(--muted) 88%, white); line-height: 1.1;
+    .day .d, .day-date {
+      font-size: clamp(0.56rem, 8.5cqi, 0.76rem);
+      color: color-mix(in srgb, var(--muted) 72%, #fff);
+      line-height: 1.2; text-align: center;
+      max-width: 100%;
+      font-weight: 500;
     }
-    .day .icon { font-size: clamp(1.4rem, 3.2vw, 2rem); line-height: 1; font-weight: 700; }
+    .day-hit, .day-date {
+      border: 0; background: transparent; font-family: inherit; color: inherit;
+      padding: 0; width: 100%;
+    }
+    .day-hit {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: clamp(4px, 2.4cqi, 8px); flex: 1 1 auto; align-self: stretch;
+      min-height: 0; cursor: pointer;
+    }
+    .day-hit:disabled { opacity: 1; cursor: inherit; }
+    #childView .day.tappable { cursor: pointer; }
+    /* 宝宝端：卡槽铺满网格；星星+数字紧凑居中；日期贴底 */
+    #childView > .stars-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    #childView .days {
+      --slot-cols: 5;
+      --slot-rows: 2;
+      flex: 1 1 auto;
+      min-height: 0;
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(var(--slot-cols), minmax(0, 1fr));
+      grid-template-rows: repeat(var(--slot-rows), minmax(0, 1fr));
+      align-content: stretch;
+      justify-items: stretch;
+      gap: 10px;
+    }
+    #childView .day {
+      aspect-ratio: auto;
+      height: 100%;
+      width: 100%;
+      min-height: 0;
+      padding: 10px 6px 34px;
+      gap: 0;
+      justify-content: center;
+      border-radius: 18px;
+    }
+    #childView .day .day-hit {
+      flex: 0 0 auto;
+      width: 100%;
+      align-self: center;
+      gap: 4px;
+      justify-content: center;
+    }
+    #childView .day .icon {
+      flex: 0 0 auto;
+      font-size: clamp(2.7rem, 52cqi, 4.4rem);
+      line-height: 1;
+    }
+    #childView .day .n {
+      font-size: clamp(1.7rem, 34cqi, 2.45rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: color-mix(in srgb, var(--ink) 55%, var(--muted));
+    }
+    #childView .day.todo .n {
+      color: color-mix(in srgb, var(--muted) 82%, var(--ink));
+    }
+    #childView .day.ready .n {
+      color: var(--primary-deep);
+    }
+    #childView .day.done .n {
+      color: #c48400;
+    }
+    #childView .day-date {
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      bottom: 8px;
+      margin: 0;
+      gap: 1px;
+      color: color-mix(in srgb, #c48400 35%, var(--muted));
+      font-size: clamp(0.72rem, 13cqi, 0.92rem);
+      font-weight: 650;
+    }
+    #childView .day.todo .day-date {
+      color: color-mix(in srgb, var(--muted) 78%, #fff);
+    }
+    #childView .day.ready .day-date {
+      color: color-mix(in srgb, var(--primary) 45%, var(--muted));
+    }
+    #childView .days > .empty {
+      grid-column: 1 / -1;
+      grid-row: 1 / -1;
+      align-self: center;
+      justify-self: center;
+    }
+    .day-date {
+      cursor: default;
+      display: flex; flex-direction: column; align-items: center; gap: 1px;
+      margin-top: 1px;
+    }
+    .day-date .day-ymd,
+    .day-date .day-week { white-space: nowrap; line-height: 1.15; }
+    .day-date .day-week { font-size: 0.92em; font-weight: 500; opacity: 0.92; }
+    .day-date.editable {
+      cursor: pointer;
+      color: color-mix(in srgb, var(--primary-deep) 42%, var(--muted));
+      font-weight: 500;
+    }
+    .day-date.editable .day-ymd {
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      text-decoration-color: color-mix(in srgb, var(--primary) 32%, transparent);
+    }
+    .date-pop {
+      position: fixed; z-index: 70; width: min(280px, calc(100vw - 16px));
+      background: #fff; border-radius: 18px; padding: 12px 12px 10px;
+      box-shadow: 0 16px 40px rgba(36, 58, 85, 0.22);
+      border: 1px solid var(--line);
+    }
+    .date-pop-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      margin-bottom: 8px;
+    }
+    .date-pop-head strong { font-size: var(--fs-sm); }
+    .date-pop-nav {
+      width: 32px; height: 32px; border: 0; border-radius: 10px;
+      background: color-mix(in srgb, var(--primary) 10%, white);
+      color: var(--primary-deep); font-size: 1.1rem; cursor: pointer; font-family: inherit;
+    }
+    .date-pop-week, .date-pop-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center;
+    }
+    .date-pop-week span {
+      font-size: 0.72rem; color: var(--muted); font-weight: 600; padding: 4px 0;
+    }
+    .date-pop-grid button {
+      border: 0; background: transparent; border-radius: 10px;
+      height: 34px; font-size: var(--fs-sm); font-weight: 600; color: var(--ink);
+      cursor: pointer; font-family: inherit;
+    }
+    .date-pop-grid button.muted { color: color-mix(in srgb, var(--muted) 70%, white); font-weight: 500; }
+    .date-pop-grid button.today { box-shadow: inset 0 0 0 1.5px var(--primary); }
+    .date-pop-grid button.picked { background: var(--primary); color: #fff; }
+    .date-pop-foot { display: flex; justify-content: flex-end; margin-top: 6px; }
+    .date-pop-foot button {
+      border: 0; background: transparent; color: var(--primary-deep);
+      font-weight: 700; font-size: var(--fs-sm); cursor: pointer; font-family: inherit; padding: 6px 4px;
+    }
+    .day .icon { font-size: clamp(1.85rem, 42cqi, 3.5rem); line-height: 1; font-weight: 700; }
     .day .icon.star-off { color: #c9d8ea; }
     .day .icon.star-ready {
       color: var(--primary); -webkit-text-fill-color: var(--primary);
@@ -456,6 +1259,10 @@
     }
     .day.ready .icon.star-ready {
       filter: drop-shadow(0 0 6px color-mix(in srgb, var(--primary) 55%, transparent));
+    }
+    .day.ready .n {
+      color: var(--primary-deep);
+      font-weight: 800;
     }
     .day.done {
       background: linear-gradient(160deg, #fff8d6, #ffe9a8);
@@ -681,10 +1488,14 @@
     .toast.err { background: color-mix(in srgb, var(--bad) 82%, #5a2030); }
 
     .ask-mask {
-      position: fixed; inset: 0; z-index: 85;
+      position: fixed; inset: 0; z-index: 100;
       display: grid; align-items: end; justify-items: center;
       padding: 16px; padding-bottom: calc(16px + var(--safe-bottom));
       background: rgba(20, 30, 34, 0.28);
+    }
+    .ask-mask.hidden {
+      display: none !important;
+      pointer-events: none !important;
     }
     .ask-sheet {
       width: min(420px, 100%); background: #fff; border-radius: 22px;
@@ -703,10 +1514,17 @@
     .ask-actions .btn { flex: 1; }
 
     .modal-mask, .cert-mask {
-      position: fixed; inset: 0; display: grid; place-items: center; padding: 16px; z-index: 50;
+      position: fixed; inset: 0; display: grid; place-items: center; padding: 16px; z-index: 90;
       background: rgba(20, 30, 34, 0.45);
     }
-    .cert-mask { z-index: 60; background: rgba(20, 30, 34, 0.55); overflow: auto; }
+    .modal-mask.hidden { display: none !important; }
+    .cert-mask {
+      z-index: 95; background: rgba(20, 30, 34, 0.55);
+      display: flex !important; align-items: center; justify-content: center;
+      overflow: hidden; padding: 12px;
+      padding-bottom: calc(12px + var(--safe-bottom));
+    }
+    .cert-mask.hidden { display: none !important; }
     .modal {
       width: min(360px, 100%); background: #fff; border-radius: 22px; padding: 24px 22px 20px;
       box-shadow: var(--shadow); text-align: center;
@@ -714,7 +1532,7 @@
     .modal h3 { margin: 0 0 6px; font-size: var(--fs-xl); font-weight: 700; }
     .modal p { margin: 0 0 18px; color: var(--muted); font-size: var(--fs-sm); line-height: 1.5; }
     .code-boxes {
-      display: flex; justify-content: center; gap: 12px; margin: 0 0 12px;
+      display: flex; justify-content: center; gap: 12px; margin: 0 0 24px;
     }
     .code-boxes input {
       width: 52px; height: 60px; border: 2px solid var(--line); border-radius: 14px;
@@ -764,6 +1582,20 @@
       background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 85%, white), var(--primary));
     }
     .switch.on::after { transform: translateX(22px); }
+    .debug-panel {
+      margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line);
+    }
+    .debug-toggle-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .debug-toggle-row strong {
+      font-size: var(--fs-sm); font-weight: 700; color: var(--ink);
+    }
+    .debug-toggle-row .meta {
+      display: block; margin-top: 2px; font-size: 0.78rem; color: var(--muted); font-weight: 500;
+    }
+    .debug-tools { margin-top: 10px; }
+    .debug-tools .hint { margin-top: 0; }
     .lock-edit-panel {
       margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--line);
     }
@@ -776,8 +1608,19 @@
       box-shadow: 0 10px 24px color-mix(in srgb, var(--primary) 40%, transparent);
     }
     .fab-unlock:active { transform: scale(0.96); }
-    .cert-panel { width: min(560px, 100%); display: grid; gap: 14px; }
-    #certCanvas { width: 100%; height: auto; border-radius: 16px; box-shadow: var(--shadow); background: #fff; }
+    .cert-panel {
+      width: min(520px, 100%); max-height: 100%;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      min-height: 0;
+    }
+    #certCanvas {
+      display: block;
+      aspect-ratio: 1080 / 1520;
+      width: min(100%, calc((100dvh - 168px - var(--safe-top) - var(--safe-bottom)) * 1080 / 1520));
+      height: auto;
+      max-height: calc(100dvh - 168px - var(--safe-top) - var(--safe-bottom));
+      border-radius: 16px; box-shadow: var(--shadow); background: #fff;
+    }
     .cert-actions {
       display: flex; gap: 10px; align-items: stretch;
     }
@@ -795,6 +1638,73 @@
     @keyframes fall {
       to { transform: translateY(110vh) rotate(720deg); opacity: 0.2; }
     }
+
+    /* 窄屏：齿轮固定右上角，其余按钮可换到下一行 */
+    @media (max-width: 720px) {
+      .topbar {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+          "brand settings"
+          "actions actions";
+        align-items: start;
+        gap: 8px 10px;
+      }
+      .brand { min-width: 0; }
+      .brand h1 { font-size: 1.28rem; }
+      .topbar-actions {
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .topbar-handoff { padding: 0 12px; height: 36px; font-size: 0.82rem; }
+      .topbar-settings { width: 36px; height: 36px; }
+      .topbar-settings svg { width: 24px; height: 24px; }
+      .mode-switch { height: 36px; padding: 2px; }
+      .mode-switch button { padding: 0 11px; height: 30px; }
+      .page-back {
+        font-size: 1.08rem;
+        padding: 8px 8px 8px 0;
+        min-height: 46px;
+      }
+      .page-back-icon {
+        width: 1.6em;
+        height: 1.6em;
+      }
+      .section-head .meta {
+        flex: 1 1 100%;
+        text-align: left;
+      }
+      .section-actions { width: 100%; }
+      .section-actions .btn { flex: 1 1 calc(50% - 8px); }
+      .task-summary { align-items: flex-start; }
+      .days { gap: 6px; }
+      .day {
+        aspect-ratio: auto;
+        min-height: 118px;
+        height: auto;
+        padding: 10px 4px 8px;
+        overflow: visible;
+        gap: 4px;
+      }
+      .day .icon { font-size: clamp(1.7rem, 36cqi, 2.35rem); }
+      .day .n { font-size: clamp(0.72rem, 12.5cqi, 0.86rem); }
+      .day-date { font-size: clamp(0.54rem, 10cqi, 0.7rem); }
+      #childView > .stars-panel .days,
+      #childView .days {
+        min-height: 0;
+      }
+      #childView .day .icon {
+        font-size: clamp(2.4rem, 46cqi, 3.3rem);
+      }
+      #childView .day .n {
+        font-size: clamp(1.45rem, 30cqi, 2rem);
+      }
+      #childView .day-date {
+        font-size: clamp(0.72rem, 12.5cqi, 0.9rem);
+      }
+      .btn-row .btn,
+      .parent-toolbar .btn { white-space: normal; }
+    }
   </style>
 </head>
 <body>
@@ -804,10 +1714,19 @@
         <h1 id="mainTitle">打卡挑战 ⭐</h1>
         <p id="subtitle">一点点完成，星星会发光哦</p>
       </div>
-      <div class="mode-switch" id="modeSwitch" role="tablist">
-        <button type="button" id="btnChild" class="active">宝宝</button>
-        <button type="button" id="btnParent">家长</button>
+      <div class="topbar-actions">
+        <button type="button" class="topbar-handoff hidden" id="handoffBaby">交给宝宝</button>
+        <div class="mode-switch" id="modeSwitch" role="tablist" aria-label="切换角色">
+          <button type="button" id="btnChild" class="active">宝宝</button>
+          <button type="button" id="btnParent">家长</button>
+        </div>
       </div>
+      <button type="button" class="topbar-settings hidden" id="openSettings" aria-label="设置" title="设置">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V20a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H20a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
+        </svg>
+      </button>
     </div>
 
     <section id="childView">
@@ -829,12 +1748,13 @@
             </svg>
             <div class="center">
               <div>
-                <strong id="streakNum">0</strong>
-                <span>/ <span id="goalNum">10</span> 天</span>
+                <strong id="progressNum">0</strong>
+                <span>/ <span id="goalNum">7</span> <span id="goalUnit">颗</span></span>
               </div>
             </div>
           </div>
-          <div class="ring-caption">当前连续完成</div>
+          <div class="ring-caption" id="ringCaption">已点亮星星</div>
+          <div class="side-stat" id="sideStat"></div>
         </div>
       </div>
       <div class="card stars-panel">
@@ -847,85 +1767,62 @@
     </section>
 
     <section id="parentView" class="hidden">
-      <div class="card">
-        <strong class="section-title">基础设置</strong>
-        <p class="hint">昵称会用在鼓励文案和奖状里。皮肤立刻作用于整页配色。</p>
-        <label class="field">宝宝昵称
-          <input id="babyName" type="text" maxlength="20" placeholder="例如：小宝子" autocomplete="nickname" />
-        </label>
-        <div class="skin-label">皮肤风格</div>
-        <div class="theme-grid" id="themeGrid">
-          <button type="button" class="theme-chip" data-theme="blue"><span class="theme-dot" style="background:#4ea1ff"></span>蓝色</button>
-          <button type="button" class="theme-chip" data-theme="pink"><span class="theme-dot" style="background:#ff8fb8"></span>粉色</button>
-          <button type="button" class="theme-chip" data-theme="green"><span class="theme-dot" style="background:#3ecf8e"></span>绿色</button>
-          <button type="button" class="theme-chip" data-theme="yellow"><span class="theme-dot" style="background:#f0c42e"></span>黄色</button>
-          <button type="button" class="theme-chip" data-theme="purple"><span class="theme-dot" style="background:#9b7aef"></span>紫色</button>
-        </div>
-        <div class="btn-row" style="margin-top:0;">
-          <button type="button" class="btn btn-primary" id="saveProfile">保存设置</button>
-          <button type="button" class="btn btn-secondary" id="resetProfile">恢复默认设置</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <strong class="section-title">任务设置</strong>
-        <p class="hint">连续打卡：未点亮的天数不计入连续。任务内容写在名称里即可。</p>
-        <label class="field">任务名称
-          <input id="taskTitle" type="text" maxlength="40" placeholder="例如：夜间不尿床挑战" />
-        </label>
-        <label class="field">奖励名称
-          <input id="rewardName" type="text" maxlength="40" placeholder="例如：心仪的玩具" />
-        </label>
-        <label class="field">开始日期
-          <input id="startDate" type="date" />
-        </label>
-        <label class="field">连续天数
-          <input id="goalDays" type="number" min="3" max="60" value="10" />
-        </label>
-        <p class="hint" id="rangePreview"></p>
-        <div class="btn-row">
-          <button type="button" class="btn btn-primary" id="saveTask">保存任务</button>
-          <button type="button" class="btn btn-secondary" id="clearTask">清空任务</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <strong class="section-title">每日打卡</strong>
-        <p class="hint">点格子：空白→可点亮→已点亮→空白。标成「可点亮」后，留给宝宝在宝宝页亲手点亮更有仪式感；也可由家长直接点亮。</p>
-        <div class="parent-toolbar">
-          <button type="button" class="btn btn-primary" id="fillAllReady">一键可点亮</button>
-          <button type="button" class="btn btn-sun" id="fillAllOk">一键打满</button>
-          <button type="button" class="btn btn-secondary" id="clearAllMarks">一键清除</button>
-        </div>
-        <div class="days" id="parentDays"></div>
-        <div class="btn-row">
-          <button type="button" class="btn btn-sun" id="previewCert">预览奖状</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <strong class="section-title">家长设置</strong>
-        <div class="lock-row">
-          <div class="lock-copy">
-            <strong>宝宝模式</strong>
-            <span>开启后只显示宝宝页，需输入童锁密码才能退出</span>
+      <div class="card span-all" id="activeTaskCard">
+        <div class="section-head" style="margin-bottom:10px;">
+          <strong class="section-title" style="margin:0;">当前任务</strong>
+          <div class="section-actions">
+            <button type="button" class="btn btn-secondary" id="openTaskHistory" style="padding:10px 14px;font-size:var(--fs-sm);">历史任务 <span id="historyCountBadge" style="font-weight:600;opacity:0.85;"></span></button>
+            <button type="button" class="btn btn-primary" id="openNewTask" style="padding:10px 14px;font-size:var(--fs-sm);">新建任务</button>
           </div>
-          <button type="button" class="switch" id="babyModeSwitch" role="switch" aria-checked="false" aria-label="宝宝模式"></button>
         </div>
-        <div class="btn-row" style="margin-top:0;">
-          <button type="button" class="btn btn-secondary" id="toggleLockEdit">修改童锁密码</button>
+        <div id="activeTaskEmpty" class="hidden">
+          <div class="empty">
+            <strong>还没有进行中的挑战</strong>
+            点「新建任务」开启累计打卡
+          </div>
         </div>
-        <div class="code-set lock-edit-panel hidden" id="lockEditPanel">
-          <div class="skin-label" style="text-align:center;">输入新的 4 位数字（默认 1234）</div>
-          <div class="code-boxes" id="lockSetBoxes">
-            <input class="lock-set-digit" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="童锁第1位" />
-            <input class="lock-set-digit" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="童锁第2位" />
-            <input class="lock-set-digit" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="童锁第3位" />
-            <input class="lock-set-digit" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="童锁第4位" />
+        <div id="activeTaskPanel" class="hidden">
+          <div class="task-summary">
+            <div class="title" id="activeTaskName">—</div>
+            <span class="status-pill" id="activeStatusPill">进行中</span>
+          </div>
+          <p class="hint" id="activeTaskHint"></p>
+          <div class="inline-fields">
+            <label class="field">任务名称
+              <input id="editTitle" type="text" maxlength="40" />
+            </label>
+            <label class="field">目标奖励
+              <input id="editReward" type="text" maxlength="40" />
+            </label>
           </div>
           <div class="btn-row" style="margin-top:0;">
-            <button type="button" class="btn btn-primary" id="saveLock">保存密码</button>
-            <button type="button" class="btn btn-secondary" id="cancelLockEdit">取消</button>
+            <button type="button" class="btn btn-primary" id="saveTaskMeta">保存修改</button>
+            <button type="button" class="btn btn-secondary" id="archiveTask">归档任务</button>
+          </div>
+
+          <strong class="section-title" style="margin-top:18px;">打卡</strong>
+          <p class="hint" id="checkinHint"></p>
+          <div class="days" id="parentDays"></div>
+          <div class="btn-row">
+            <button type="button" class="btn btn-sun" id="previewCert">预览奖状</button>
+            <button type="button" class="btn btn-secondary" id="previewStarFx">预览星星特效</button>
+            <button type="button" class="btn btn-secondary" id="previewSuperStarFx">预览超级星星特效</button>
+          </div>
+          <div class="debug-panel">
+            <div class="debug-toggle-row">
+              <div>
+                <strong>调试模式</strong>
+                <span class="meta">打开后可预览完成效果，关闭时可选择是否恢复备份</span>
+              </div>
+              <button type="button" class="switch" id="debugSwitch" aria-pressed="false" aria-label="调试模式"></button>
+            </div>
+            <div class="debug-tools hidden" id="debugTools">
+              <p class="hint">调试用，方便看完成后的效果，不是日常打卡。开启时已备份当前数据。</p>
+              <div class="btn-row" style="margin-top:0;">
+                <button type="button" class="btn btn-secondary" id="debugFill">一键打满</button>
+                <button type="button" class="btn btn-secondary" id="debugClear">一键清空</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -933,6 +1830,20 @@
   </div>
 
   <button type="button" class="fab-unlock hidden" id="exitBabyModeFab" aria-label="退出宝宝模式">家长</button>
+  <div class="date-pop hidden" id="datePop" role="dialog" aria-label="选择日期">
+    <div class="date-pop-head">
+      <button type="button" class="date-pop-nav" id="datePopPrev" aria-label="上个月">‹</button>
+      <strong id="datePopTitle">—</strong>
+      <button type="button" class="date-pop-nav" id="datePopNext" aria-label="下个月">›</button>
+    </div>
+    <div class="date-pop-week" aria-hidden="true">
+      <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+    </div>
+    <div class="date-pop-grid" id="datePopGrid"></div>
+    <div class="date-pop-foot">
+      <button type="button" id="datePopToday">今天</button>
+    </div>
+  </div>
 
   <div class="modal-mask hidden" id="lockModal">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="lockTitle">
@@ -947,6 +1858,121 @@
       <p class="lock-error" id="lockError" aria-live="polite"></p>
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" id="lockCancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask hidden" id="lockEditModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="lockEditTitle">
+      <h3 id="lockEditTitle">修改童锁密码</h3>
+      <p>输入新的 4 位数字</p>
+      <div class="code-boxes" id="lockSetBoxes">
+        <input class="lock-set-digit" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="童锁第1位" />
+        <input class="lock-set-digit" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="童锁第2位" />
+        <input class="lock-set-digit" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="童锁第3位" />
+        <input class="lock-set-digit" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="童锁第4位" />
+      </div>
+      <div class="modal-actions pair">
+        <button type="button" class="btn btn-primary" id="saveLock">保存密码</button>
+        <button type="button" class="btn btn-secondary" id="cancelLockEdit">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="drawer-mask page-mask hidden" id="taskHistoryModal">
+    <div class="drawer" role="dialog" aria-modal="true" aria-labelledby="taskHistoryTitle">
+      <div class="page-toolbar">
+        <button type="button" class="page-back" id="backTaskHistory">
+          <svg class="page-back-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+          返回
+        </button>
+        <h3 id="taskHistoryTitle">历史任务</h3>
+        <span aria-hidden="true"></span>
+      </div>
+      <div class="drawer-head">
+        <p class="hint">宝宝页只显示当前任务。这里可回顾奖状，或删除不需要的记录。</p>
+      </div>
+      <div class="drawer-body">
+        <div class="task-list" id="taskList"></div>
+      </div>
+      <div class="drawer-foot">
+        <button type="button" class="btn btn-secondary" id="closeTaskHistory">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="drawer-mask page-mask hidden" id="settingsDrawer">
+    <div class="drawer" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="page-toolbar">
+        <button type="button" class="page-back" id="backSettings">
+          <svg class="page-back-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+          返回
+        </button>
+        <h3 id="settingsTitle">设置</h3>
+        <span aria-hidden="true"></span>
+      </div>
+      <div class="drawer-head">
+        <p class="hint">昵称、皮肤与童锁。交给宝宝的按钮在页面顶部。</p>
+      </div>
+      <div class="drawer-body">
+        <div class="drawer-section">
+          <strong class="drawer-section-title">宝宝资料</strong>
+          <label class="field">宝宝昵称
+            <input id="babyName" type="text" maxlength="20" placeholder="例如：小宝子" autocomplete="nickname" />
+          </label>
+          <div class="skin-label">皮肤风格</div>
+          <div class="theme-grid" id="themeGrid">
+            <button type="button" class="theme-chip" data-theme="blue"><span class="theme-dot" style="background:#4ea1ff"></span>蓝色</button>
+            <button type="button" class="theme-chip" data-theme="pink"><span class="theme-dot" style="background:#ff8fb8"></span>粉色</button>
+            <button type="button" class="theme-chip" data-theme="green"><span class="theme-dot" style="background:#3ecf8e"></span>绿色</button>
+            <button type="button" class="theme-chip" data-theme="yellow"><span class="theme-dot" style="background:#f0c42e"></span>黄色</button>
+            <button type="button" class="theme-chip" data-theme="purple"><span class="theme-dot" style="background:#9b7aef"></span>紫色</button>
+          </div>
+          <div class="btn-row" style="margin-top:0;">
+            <button type="button" class="btn btn-primary" id="saveProfile">保存设置</button>
+            <button type="button" class="btn btn-secondary" id="resetProfile">恢复默认</button>
+          </div>
+        </div>
+        <div class="drawer-section">
+          <strong class="drawer-section-title">安全</strong>
+          <p class="hint">默认童锁为 1234。建议改成自己记得的密码，再给宝宝玩。</p>
+          <div class="btn-row" style="margin-top:0;">
+            <button type="button" class="btn btn-secondary" id="toggleLockEdit">修改童锁密码</button>
+          </div>
+        </div>
+      </div>
+      <div class="drawer-foot">
+        <button type="button" class="btn btn-secondary" id="closeSettings">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="drawer-mask hidden" id="newTaskModal">
+    <div class="drawer" role="dialog" aria-modal="true" aria-labelledby="newTaskTitle">
+      <div class="drawer-handle" aria-hidden="true"></div>
+      <div class="drawer-head">
+        <h3 id="newTaskTitle">新建任务</h3>
+        <p class="hint">同时只能有一个进行中的任务。攒满星星即可兑奖，已得星不会清零。</p>
+      </div>
+      <div class="drawer-body">
+        <label class="field">任务名称
+          <input id="newTitle" type="text" maxlength="40" placeholder="例如：早睡挑战" />
+        </label>
+        <label class="field">目标奖励
+          <input id="newReward" type="text" maxlength="40" placeholder="例如：心仪的玩具" />
+        </label>
+        <label class="field">目标颗数
+          <input id="newGoalDays" type="number" min="3" max="60" value="7" />
+        </label>
+        <p class="hint" id="newTaskPreview"></p>
+      </div>
+      <div class="drawer-foot" style="gap:10px;">
+        <button type="button" class="btn btn-secondary" id="cancelNewTask" style="flex:1;min-width:0;">取消</button>
+        <button type="button" class="btn btn-primary" id="confirmNewTask" style="flex:1;min-width:0;">开启任务</button>
       </div>
     </div>
   </div>
@@ -967,7 +1993,49 @@
     <div class="stage">
       <div class="glow"></div>
       <div class="rays" aria-hidden="true"></div>
-      <div class="big-star">★</div>
+      <div class="big-star glyph" id="starCelebGlyph">★</div>
+      <div class="gift-show" id="starCelebGift" aria-hidden="true">
+        <div class="gift-scene">
+          <div class="pop-star">
+            <svg viewBox="0 0 200 200" aria-hidden="true">
+              <defs>
+                <radialGradient id="cuteStarFill" cx="32%" cy="28%" r="78%">
+                  <stop offset="0%" stop-color="#fff7c4"/>
+                  <stop offset="38%" stop-color="#ffd21a"/>
+                  <stop offset="78%" stop-color="#ffb400"/>
+                  <stop offset="100%" stop-color="#f08a00"/>
+                </radialGradient>
+                <radialGradient id="cuteStarShade" cx="50%" cy="18%" r="80%">
+                  <stop offset="0%" stop-color="#fff" stop-opacity="0.55"/>
+                  <stop offset="42%" stop-color="#fff" stop-opacity="0"/>
+                  <stop offset="100%" stop-color="#e07a00" stop-opacity="0.28"/>
+                </radialGradient>
+                <filter id="cuteStarGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#ffd45a" flood-opacity="0.9"/>
+                </filter>
+              </defs>
+              <circle cx="100" cy="100" r="78" fill="#7ec8ff" opacity="0.28"/>
+              <path filter="url(#cuteStarGlow)" fill="url(#cuteStarFill)" stroke="url(#cuteStarFill)" stroke-width="22" stroke-linejoin="round" stroke-linecap="round"
+                d="M100 28l16 36 40 6-29 27 8 40-35-20-35 20 8-40-29-27 40-6z"/>
+              <path fill="url(#cuteStarShade)" stroke="url(#cuteStarShade)" stroke-width="22" stroke-linejoin="round" stroke-linecap="round"
+                d="M100 28l16 36 40 6-29 27 8 40-35-20-35 20 8-40-29-27 40-6z"/>
+              <!-- 脸部上移，贴近 logo：眼睛落在星体中上区域 -->
+              <ellipse cx="74" cy="52" rx="16" ry="9" fill="#fff" opacity="0.72" transform="rotate(-28 74 52)"/>
+              <ellipse cx="81" cy="84" rx="9.2" ry="11.5" fill="#2a2418"/>
+              <ellipse cx="119" cy="84" rx="9.2" ry="11.5" fill="#2a2418"/>
+              <ellipse cx="84.5" cy="80" rx="3.4" ry="4.2" fill="#fff"/>
+              <ellipse cx="122.5" cy="80" rx="3.4" ry="4.2" fill="#fff"/>
+              <ellipse cx="63" cy="100" rx="8.5" ry="5.2" fill="#ff9bb6" opacity="0.88"/>
+              <ellipse cx="137" cy="100" rx="8.5" ry="5.2" fill="#ff9bb6" opacity="0.88"/>
+              <path d="M91 104c5.5 7.5 12.5 7.5 18 0" fill="none" stroke="#2a2418" stroke-width="3.4" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="gift-box">
+            <div class="gift-lid"></div>
+            <div class="gift-body"></div>
+          </div>
+        </div>
+      </div>
       <div class="caption" id="starCelebCaption">点亮成功！</div>
     </div>
   </div>
@@ -984,6 +2052,7 @@
 
   <script>
     const STORAGE_KEY = "twinkle-stars-v1";
+    const DEBUG_KEY = "twinkle-stars-debug-v1";
     const CIRC = 2 * Math.PI * 52;
     const THEMES = ["blue", "pink", "green", "yellow", "purple"];
     const FALLBACK_NAME = "宝宝";
@@ -995,29 +2064,211 @@
       babyMode: false,
       theme: "blue",
       profile: { nickname: "" },
-      task: null,
+      tasks: [],
+      activeTaskId: null,
     });
 
     let state = load();
     let mode = "child";
+    let certTaskId = null;
+    let debugSession = loadDebugSession();
+    // 若从旧版单任务结构迁移而来，立刻落盘，避免刷新又读到旧数据
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.task && !Array.isArray(parsed.tasks)) save();
+        else if (Array.isArray(parsed.tasks) && parsed.task) {
+          delete state.task;
+          save();
+        }
+      }
+    } catch (_) {}
+
+    function uid() {
+      return `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function migrate(parsed) {
+      const base = {
+        ...defaultState(),
+        lockCode: parsed.lockCode || DEFAULT_LOCK_CODE,
+        babyMode: !!parsed.babyMode,
+        theme: THEMES.includes(parsed.theme) ? parsed.theme : "blue",
+        profile: { nickname: ((parsed.profile && parsed.profile.nickname) || "").trim() },
+      };
+
+      if (Array.isArray(parsed.tasks)) {
+        base.tasks = parsed.tasks.map(normalizeTask).filter(Boolean);
+        base.activeTaskId = parsed.activeTaskId || null;
+        if (base.activeTaskId && !base.tasks.some((t) => t.id === base.activeTaskId)) {
+          base.activeTaskId = null;
+        }
+        if (!base.activeTaskId) {
+          const active = base.tasks.find((t) => t.status === "active");
+          if (active) base.activeTaskId = active.id;
+        }
+        return base;
+      }
+
+      // v1 single task / 旧连续模式 → 累计星槽
+      if (parsed.task) {
+        const t = parsed.task;
+        const id = uid();
+        const migrated = normalizeTask({
+          id,
+          title: t.title || "打卡挑战",
+          reward: t.reward || "心愿奖励",
+          goalDays: t.goalDays || 7,
+          startDate: t.startDate || todayStr(),
+          marks: t.marks || {},
+          stars: null,
+          status: t.completedAt ? "completed" : "active",
+          completedAt: t.completedAt || null,
+          createdAt: new Date().toISOString(),
+        });
+        base.tasks = [migrated];
+        base.activeTaskId = migrated.status === "active" ? id : null;
+      }
+      return base;
+    }
+
+    function starsFromLegacy(raw, goalDays) {
+      if (Array.isArray(raw.stars) && raw.mode !== "streak") {
+        return ensureStars(raw.stars, goalDays);
+      }
+      if (raw.marks && typeof raw.marks === "object") {
+        const start = raw.startDate || todayStr();
+        const list = [];
+        for (let i = 0; i < goalDays; i++) {
+          const d = addDays(start, i);
+          const m = raw.marks[d];
+          if (m === "ok") list.push({ status: "ok", date: d });
+          else if (m === "ready") list.push({ status: "ready", date: d });
+          else list.push({ status: "empty", date: null });
+        }
+        return ensureStars(list, goalDays);
+      }
+      return ensureStars(raw.stars, goalDays);
+    }
+
+    function normalizeTask(raw) {
+      if (!raw || typeof raw !== "object") return null;
+      const goalDays = Math.min(60, Math.max(3, Number(raw.goalDays) || 7));
+      return {
+        id: raw.id || uid(),
+        title: (raw.title || "打卡挑战").trim() || "打卡挑战",
+        reward: (raw.reward || "心愿奖励").trim() || "心愿奖励",
+        mode: "accumulate",
+        goalDays,
+        stars: starsFromLegacy(raw, goalDays),
+        status: raw.status === "completed" || raw.status === "archived" ? raw.status : "active",
+        completedAt: raw.completedAt || null,
+        createdAt: raw.createdAt || new Date().toISOString(),
+      };
+    }
+
+    function ensureStars(stars, goalDays) {
+      const source = Array.isArray(stars) ? stars : [];
+      const list = [];
+      for (let i = 0; i < goalDays; i++) {
+        const s = source[i];
+        if (s && typeof s === "object") {
+          // 复用原对象，避免校验函数换数组后改到旧引用
+          s.status = s.status === "ok" || s.status === "ready" ? s.status : "empty";
+          s.date = s.date || null;
+          list.push(s);
+        } else {
+          list.push({ status: "empty", date: null });
+        }
+      }
+      return list;
+    }
 
     function load() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return defaultState();
-        const parsed = JSON.parse(raw);
-        const nickname = ((parsed.profile && parsed.profile.nickname) || "").trim();
-        return {
-          ...defaultState(),
-          ...parsed,
-          babyMode: !!parsed.babyMode,
-          profile: { nickname },
-        };
+        return migrate(JSON.parse(raw));
       } catch {
         return defaultState();
       }
     }
     function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+    function loadDebugSession() {
+      try {
+        const raw = localStorage.getItem(DEBUG_KEY);
+        if (!raw) return { on: false, backup: null };
+        const parsed = JSON.parse(raw);
+        return {
+          on: !!parsed.on,
+          backup: parsed.backup && typeof parsed.backup === "object" ? parsed.backup : null,
+        };
+      } catch {
+        return { on: false, backup: null };
+      }
+    }
+    function saveDebugSession() {
+      localStorage.setItem(DEBUG_KEY, JSON.stringify({
+        on: !!debugSession.on,
+        backup: debugSession.backup || null,
+      }));
+    }
+    function cloneStateSnapshot() {
+      return JSON.parse(JSON.stringify(state));
+    }
+    function restoreStateFromBackup(backup) {
+      if (!backup || typeof backup !== "object") return false;
+      state = migrate(backup);
+      save();
+      return true;
+    }
+    function syncDebugUi() {
+      const sw = document.getElementById("debugSwitch");
+      const tools = document.getElementById("debugTools");
+      if (!sw || !tools) return;
+      const on = !!debugSession.on;
+      sw.classList.toggle("on", on);
+      sw.setAttribute("aria-pressed", on ? "true" : "false");
+      tools.classList.toggle("hidden", !on);
+    }
+    let debugToggleBusy = false;
+    async function setDebugMode(nextOn) {
+      if (debugToggleBusy) return;
+      if (nextOn === !!debugSession.on) return;
+      debugToggleBusy = true;
+      const sw = document.getElementById("debugSwitch");
+      if (sw) sw.disabled = true;
+      try {
+        if (nextOn) {
+          // 避免上次确认框残留遮罩挡住打卡
+          document.getElementById("askMask").classList.add("hidden");
+          debugSession = { on: true, backup: cloneStateSnapshot() };
+          saveDebugSession();
+          syncDebugUi();
+          toast("已开启调试，并备份当前数据");
+          return;
+        }
+        const restore = await askConfirm("关闭调试。要恢复开启前的备份吗？确定=恢复备份，取消=保留当前数据。");
+        if (restore) {
+          if (debugSession.backup) restoreStateFromBackup(debugSession.backup);
+          debugSession = { on: false, backup: null };
+          saveDebugSession();
+          render();
+          toast("已恢复调试前的数据");
+          return;
+        }
+        debugSession = { on: false, backup: null };
+        saveDebugSession();
+        syncDebugUi();
+        toast("已关闭调试，保留当前数据");
+      } finally {
+        debugToggleBusy = false;
+        if (sw) sw.disabled = false;
+        syncDebugUi();
+      }
+    }
 
     let askResolver = null;
     function toast(message, type = "ok") {
@@ -1035,14 +2286,22 @@
     }
     function askConfirm(message) {
       return new Promise((resolve) => {
-        if (askResolver) askResolver(false);
+        if (askResolver) {
+          const prev = askResolver;
+          askResolver = null;
+          prev(false);
+        }
         askResolver = resolve;
         document.getElementById("askText").textContent = message;
-        document.getElementById("askMask").classList.remove("hidden");
+        const mask = document.getElementById("askMask");
+        mask.classList.remove("hidden");
+        mask.setAttribute("aria-hidden", "false");
       });
     }
     function closeAsk(result) {
-      document.getElementById("askMask").classList.add("hidden");
+      const mask = document.getElementById("askMask");
+      mask.classList.add("hidden");
+      mask.setAttribute("aria-hidden", "true");
       if (askResolver) {
         const r = askResolver;
         askResolver = null;
@@ -1083,55 +2342,75 @@
       d.setDate(d.getDate() + n);
       return fmt(d);
     }
-    function dateList(start, days) {
-      const list = [];
-      for (let i = 0; i < days; i++) list.push(addDays(start, i));
-      return list;
-    }
     function weekday(s) {
       return ["日", "一", "二", "三", "四", "五", "六"][parseDate(s).getDay()];
     }
-    function shortDate(s) {
+    function fillDateEl(el, s, compact = false) {
       const d = parseDate(s);
-      return `${d.getMonth() + 1}/${d.getDate()}`;
+      el.replaceChildren();
+      const ymd = document.createElement("span");
+      ymd.className = "day-ymd";
+      ymd.textContent = compact
+        ? `${d.getMonth() + 1}.${d.getDate()}`
+        : `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`;
+      const week = document.createElement("span");
+      week.className = "day-week";
+      week.textContent = `周${weekday(s)}`;
+      el.append(ymd, week);
     }
 
-    function calcStreak(task) {
+    function activeTask() {
+      if (!state.activeTaskId) return null;
+      return state.tasks.find((t) => t.id === state.activeTaskId) || null;
+    }
+    function getTask(id) {
+      return state.tasks.find((t) => t.id === id) || null;
+    }
+    function countOk(task) {
       if (!task) return 0;
-      const marks = task.marks || {};
-      let streak = 0;
-      for (let i = 0; i < task.goalDays; i++) {
-        if (marks[addDays(task.startDate, i)] === "ok") streak += 1;
-        else break;
-      }
-      return streak;
+      return (task.stars || []).filter((s) => s.status === "ok").length;
     }
 
-    function currentRoundSlots(task) {
-      if (!task) return [];
-      return dateList(task.startDate, task.goalDays).map((date, idx) => ({
-        date,
-        index: idx + 1,
-      }));
+    function countReady(task) {
+      if (!task) return 0;
+      return (task.stars || []).filter((s) => s.status === "ready").length;
+    }
+
+    function mainProgress(task) {
+      return countOk(task);
     }
 
     function checkComplete(task) {
-      return !!(task && calcStreak(task) >= task.goalDays);
+      return !!(task && mainProgress(task) >= task.goalDays);
     }
 
-    function ensureCompleteFlag() {
-      const task = state.task;
-      if (!task) return false;
-      if (checkComplete(task) && !task.completedAt) {
+    function ensureCompleteFlag(task) {
+      if (!task || task.status === "archived") return false;
+      const done = checkComplete(task);
+      if (done && !task.completedAt) {
         task.completedAt = new Date().toISOString();
+        task.status = "completed";
         save();
         return true;
       }
-      if (!checkComplete(task) && task.completedAt) {
+      if (!done && task.completedAt && task.status === "completed") {
         task.completedAt = null;
+        task.status = "active";
         save();
       }
       return false;
+    }
+
+    function slotsFor(task) {
+      if (!task) return [];
+      task.stars = ensureStars(task.stars, task.goalDays);
+      return task.stars.map((star, idx) => ({
+        key: String(idx),
+        index: idx + 1,
+        date: star.date,
+        status: star.status,
+        kind: "slot",
+      }));
     }
 
     function updateChromeCopy() {
@@ -1146,9 +2425,12 @@
       if (on) mode = "child";
       document.getElementById("modeSwitch").classList.toggle("hidden", on);
       document.getElementById("exitBabyModeFab").classList.toggle("hidden", !on);
-      const sw = document.getElementById("babyModeSwitch");
-      sw.classList.toggle("on", on);
-      sw.setAttribute("aria-checked", on ? "true" : "false");
+    }
+
+    function syncSettingsEntry() {
+      const show = mode === "parent" && !state.babyMode;
+      document.getElementById("openSettings").classList.toggle("hidden", !show);
+      document.getElementById("handoffBaby").classList.toggle("hidden", !show);
     }
 
     function render() {
@@ -1159,22 +2441,17 @@
       document.getElementById("parentView").classList.toggle("hidden", mode !== "parent");
       document.getElementById("btnChild").classList.toggle("active", mode === "child");
       document.getElementById("btnParent").classList.toggle("active", mode === "parent");
+      syncSettingsEntry();
       if (mode === "parent") renderParent();
       renderChild();
     }
 
-    function countReady(task) {
-      if (!task) return 0;
-      const marks = task.marks || {};
-      return currentRoundSlots(task).filter((s) => marks[s.date] === "ready").length;
-    }
-
-    function buildDayCell(slot, task, role) {
-      const mark = task.marks?.[slot.date];
+    function buildSlotCell(slot, task, role) {
       const el = document.createElement("div");
       el.className = "day";
-      el.dataset.date = slot.date;
+      el.dataset.key = slot.key;
 
+      const mark = slot.status;
       let iconClass = "icon star-off";
       let icon = "☆";
       if (mark === "ok") {
@@ -1188,73 +2465,257 @@
       } else {
         el.classList.add("todo");
       }
-      if (slot.date === todayStr()) el.classList.add("today");
 
-      el.innerHTML = `<span class="${iconClass}">${icon}</span><span class="n">第${slot.index}天</span><span class="d">${shortDate(slot.date)}</span>`;
+      const storedDate = slot.date || null;
+      if (storedDate && storedDate === todayStr()) el.classList.add("today");
 
-      if (role === "parent") {
+      const label = role === "child"
+        ? String(slot.index)
+        : (mark === "ready" ? "可点亮" : `第${slot.index}颗`);
+      const hit = document.createElement("button");
+      hit.type = "button";
+      hit.className = "day-hit";
+      hit.innerHTML = `<span class="${iconClass}">${icon}</span><span class="n">${label}</span>`;
+      el.appendChild(hit);
+
+      if (storedDate) {
+        const dateEl = document.createElement(role === "parent" ? "button" : "span");
+        dateEl.className = "day-date";
+        if (dateEl.tagName === "BUTTON") {
+          dateEl.type = "button";
+          dateEl.classList.add("editable");
+          dateEl.title = "修改这一格的日期";
+          dateEl.addEventListener("click", (e) => {
+            e.stopPropagation();
+            openSlotDatePicker(task, slot.index - 1, dateEl);
+          });
+        }
+        fillDateEl(dateEl, storedDate, role === "child");
+        el.appendChild(dateEl);
+      }
+
+      const idx = slot.index - 1;
+      const canLight = role === "child" && canChildLightSlot(task, idx);
+      const canParent = role === "parent" && canParentOperateSlot(task, idx);
+      if (canParent || canLight) {
+        hit.classList.add("tappable");
         el.classList.add("tappable");
-        el.title = `${slot.date} 周${weekday(slot.date)} · 点击切换状态`;
-        el.addEventListener("click", () => cycleMarkParent(slot.date));
-      } else if (role === "child" && mark === "ready") {
-        el.classList.add("tappable");
-        el.title = "点我点亮星星";
-        el.addEventListener("click", () => lightStarByChild(slot.date));
+        const tip = canLight ? "点我点亮星星" : "点击切换：空白→可点亮→已点亮；点日期可改";
+        hit.title = tip;
+        el.title = tip;
+        // 整格可点（含日期/留白），家长改日期按钮自行 stopPropagation
+        el.addEventListener("click", (e) => {
+          if (e.target.closest(".day-date.editable")) return;
+          const live = getTask(task.id) || task;
+          if (role === "child") lightAccumulateByChild(live, idx);
+          else cycleAccumulateSlot(live, idx);
+        });
+      } else {
+        hit.disabled = true;
+        hit.style.cursor = "default";
+        if (role === "parent" && mark === "empty") hit.title = "请按顺序打卡，先处理前面的星星";
+        else if (role === "parent" && mark === "ok") hit.title = "后面还有星星时，不能从中间撤销";
+        else if (role === "child" && mark === "ready") hit.title = "请先点亮前面的星星";
       }
       return el;
     }
 
-    function cycleMarkParent(date) {
-      if (!state.task) return;
-      if (!state.task.marks) state.task.marks = {};
-      const cur = state.task.marks[date];
-      if (!cur) state.task.marks[date] = "ready";
-      else if (cur === "ready") state.task.marks[date] = "ok";
-      else delete state.task.marks[date];
+    function starsAllOkBefore(task, index) {
+      const stars = task.stars || [];
+      for (let i = 0; i < index; i++) {
+        if (!stars[i] || stars[i].status !== "ok") return false;
+      }
+      return true;
+    }
+    function canParentOperateSlot(task, index) {
+      const stars = task.stars || [];
+      const star = stars[index];
+      if (!star) return false;
+      if (star.status === "ok") {
+        for (let i = index + 1; i < stars.length; i++) {
+          if (stars[i].status !== "empty") return false;
+        }
+        return true;
+      }
+      return starsAllOkBefore(task, index);
+    }
+    function canChildLightSlot(task, index) {
+      const stars = task.stars || [];
+      const star = stars[index];
+      return !!(star && star.status === "ready" && starsAllOkBefore(task, index));
+    }
 
-      const justWon = ensureCompleteFlag();
+    /** 宝宝端卡槽列行：按数量选更均衡的网格，减少瘦长与大片留白 */
+    function childSlotGrid(count) {
+      const n = Math.max(1, Number(count) || 1);
+      if (n <= 3) return { cols: n, rows: 1 };
+      if (n === 4) return { cols: 2, rows: 2 };
+      if (n <= 6) return { cols: 3, rows: 2 };
+      if (n <= 8) return { cols: 4, rows: 2 };
+      if (n <= 10) return { cols: 5, rows: 2 };
+      if (n <= 12) return { cols: 4, rows: 3 };
+      if (n <= 15) return { cols: 5, rows: 3 };
+      const cols = 5;
+      return { cols, rows: Math.ceil(n / cols) };
+    }
+
+    let dateEdit = null;
+    let popMonth = null;
+    function otherSlotsShareDate(task, index, date) {
+      if (!date) return false;
+      return (task.stars || []).some((s, i) => {
+        if (i === index) return false;
+        return (s.status === "ok" || s.status === "ready") && s.date === date;
+      });
+    }
+    function warnIfDateShared(task, index, date) {
+      if (otherSlotsShareDate(task, index, date)) {
+        toast("这一天已经有星星了，仍可继续修改", "warn");
+      }
+    }
+    function closeDatePop() {
+      document.getElementById("datePop").classList.add("hidden");
+      dateEdit = null;
+    }
+    function applySlotDate(next) {
+      if (!dateEdit || !next) return;
+      const task = getTask(dateEdit.id);
+      const index = dateEdit.index;
+      closeDatePop();
+      if (!task) return;
+      task.stars = ensureStars(task.stars, task.goalDays);
+      const star = task.stars[index];
+      if (!star) return;
+      star.date = next;
+      warnIfDateShared(task, index, next);
       save();
       render();
-      const mark = state.task.marks[date];
-      if (mark === "ok" || mark === "ready") {
+    }
+    function renderDatePop() {
+      if (!popMonth || !dateEdit) return;
+      const y = popMonth.getFullYear();
+      const m = popMonth.getMonth();
+      document.getElementById("datePopTitle").textContent = `${y}年${m + 1}月`;
+      const grid = document.getElementById("datePopGrid");
+      grid.innerHTML = "";
+      const first = new Date(y, m, 1).getDay();
+      const count = new Date(y, m + 1, 0).getDate();
+      const today = todayStr();
+      for (let i = 0; i < first; i++) grid.appendChild(document.createElement("span"));
+      for (let day = 1; day <= count; day++) {
+        const value = fmt(new Date(y, m, day));
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = String(day);
+        if (value === today) btn.classList.add("today");
+        if (value === dateEdit.selected) btn.classList.add("picked");
+        btn.addEventListener("click", () => applySlotDate(value));
+        grid.appendChild(btn);
+      }
+    }
+    function placeDatePop(anchor) {
+      const pop = document.getElementById("datePop");
+      const rect = anchor.getBoundingClientRect();
+      const width = pop.offsetWidth;
+      const height = pop.offsetHeight;
+      let left = rect.left + rect.width / 2 - width / 2;
+      left = Math.max(8, Math.min(left, window.innerWidth - width - 8));
+      let top = rect.bottom + 8;
+      if (top + height > window.innerHeight - 8) top = Math.max(8, rect.top - height - 8);
+      pop.style.left = `${left}px`;
+      pop.style.top = `${top}px`;
+    }
+    function openSlotDatePicker(task, index, anchor) {
+      task.stars = ensureStars(task.stars, task.goalDays);
+      const star = task.stars[index];
+      if (!star) return;
+      const selected = star.date || todayStr();
+      const picked = parseDate(selected);
+      dateEdit = { id: task.id, index, selected };
+      popMonth = new Date(picked.getFullYear(), picked.getMonth(), 1);
+      const pop = document.getElementById("datePop");
+      pop.classList.remove("hidden");
+      renderDatePop();
+      placeDatePop(anchor);
+    }
+
+    function cycleAccumulateSlot(task, index) {
+      task = getTask(task.id) || task;
+      task.stars = ensureStars(task.stars, task.goalDays);
+      if (!canParentOperateSlot(task, index)) {
+        toast("请按顺序打卡，不能跳过中间的星星", "warn");
+        return;
+      }
+      const star = task.stars[index];
+      if (!star) return;
+
+      if (star.status === "empty") {
+        star.date = todayStr();
+        star.status = "ready";
+        warnIfDateShared(task, index, star.date);
+      } else if (star.status === "ready") {
+        star.status = "ok";
+      } else {
+        star.status = "empty";
+        star.date = null;
+      }
+      afterMarkChange(task, String(index));
+    }
+
+    function afterMarkChange(task, popKey) {
+      const justWon = ensureCompleteFlag(task);
+      save();
+      render();
+      if (popKey != null) {
         document.querySelectorAll("#parentDays .day").forEach((c) => {
-          if (c.dataset.date === date) c.classList.add("pop");
+          if (c.dataset.key === String(popKey)) c.classList.add("pop");
         });
       }
       if (justWon) {
         burstConfetti();
-        setTimeout(() => showCertificate(true), 350);
+        setTimeout(() => showCertificate(task, true), 350);
       }
     }
 
-    function lightStarByChild(date) {
-      if (!state.task) return;
-      if (!state.task.marks) state.task.marks = {};
-      if (state.task.marks[date] !== "ready") return;
+    function lightAccumulateByChild(task, index) {
+      task = getTask(task.id) || task;
+      task.stars = ensureStars(task.stars, task.goalDays);
+      if (!canChildLightSlot(task, index)) {
+        toast("请先点亮前面的星星", "warn");
+        return;
+      }
+      const star = task.stars[index];
+      if (!star) return;
+      star.status = "ok";
+      finishChildLight(task);
+    }
 
-      state.task.marks[date] = "ok";
-      const justWon = ensureCompleteFlag();
+    function finishChildLight(task) {
+      const justWon = ensureCompleteFlag(task);
       save();
-
       const name = babyName();
+      if (justWon) {
+        playStarCelebration(`${name}集齐星星啦！`, () => {
+          render();
+          burstConfetti();
+          toast(`${name}太棒啦！点「查看奖状」看看成果吧`);
+        }, { mascot: true });
+        return;
+      }
       playStarCelebration(`${name}点亮了一颗星！`, () => {
         render();
-        if (justWon) {
-          burstConfetti();
-          setTimeout(() => showCertificate(true), 280);
-        } else {
-          toast(`${name}太棒啦！`);
-        }
+        toast(`${name}太棒啦！`);
       });
     }
 
     let celebHideTimer = null;
     let celebDoneTimer = null;
-    function playStarCelebration(caption, onDone) {
+    function playStarCelebration(caption, onDone, options = {}) {
       const overlay = document.getElementById("starCeleb");
       const stage = overlay.querySelector(".stage");
       if (celebHideTimer) clearTimeout(celebHideTimer);
       if (celebDoneTimer) clearTimeout(celebDoneTimer);
+      overlay.classList.toggle("mascot", !!options.mascot);
 
       document.getElementById("starCelebCaption").textContent = caption || "点亮成功！";
       stage.querySelectorAll(".burst-dot").forEach((el) => el.remove());
@@ -1272,7 +2733,6 @@
         stage.appendChild(dot);
       }
 
-      // 先复位，再强制回流，最后开播，避免首次点击动画被跳过
       overlay.classList.remove("hidden", "show", "playing");
       overlay.setAttribute("aria-hidden", "false");
       void overlay.offsetWidth;
@@ -1282,7 +2742,7 @@
         overlay.classList.add("playing");
       });
 
-      const holdMs = 4200;
+      const holdMs = options.mascot ? 4800 : 4200;
       const fadeMs = 450;
       celebHideTimer = setTimeout(() => {
         overlay.classList.remove("show", "playing");
@@ -1296,61 +2756,74 @@
     }
 
     function renderChild() {
-      const task = state.task;
+      const task = activeTask();
       const name = babyName();
       const banner = document.getElementById("childBanner");
       const actions = document.getElementById("childActions");
+      const sideStat = document.getElementById("sideStat");
       actions.innerHTML = "";
+      sideStat.textContent = "";
 
       if (!task) {
         document.getElementById("childReward").textContent = "还没有任务";
-        document.getElementById("streakNum").textContent = "0";
+        document.getElementById("progressNum").textContent = "0";
         document.getElementById("goalNum").textContent = "10";
+        document.getElementById("goalUnit").textContent = "颗";
+        document.getElementById("ringCaption").textContent = "已点亮星星";
         document.getElementById("rangeText").textContent = "";
-        document.getElementById("childDays").innerHTML =
+        const emptyDays = document.getElementById("childDays");
+        emptyDays.style.removeProperty("--slot-cols");
+        emptyDays.style.removeProperty("--slot-rows");
+        emptyDays.innerHTML =
           `<div class="empty"><strong>星星还在睡觉</strong>请先在家长页发布任务</div>`;
-        setRing(0, 10);
+        setRing(0, 7);
         banner.className = "status-banner warn";
         banner.textContent = `先切换到「家长」发布任务，再回来看${name}的进度哦。`;
         return;
       }
 
-      const streak = calcStreak(task);
+      const progress = mainProgress(task);
       const ready = countReady(task);
-      const slots = currentRoundSlots(task);
       document.getElementById("childReward").textContent = task.reward || "神秘奖励";
-      document.getElementById("streakNum").textContent = String(streak);
+      document.getElementById("progressNum").textContent = String(progress);
       document.getElementById("goalNum").textContent = String(task.goalDays);
-      document.getElementById("rangeText").textContent = `${task.title || "打卡挑战"} · 目标 ${task.goalDays} 天`;
-      setRing(streak, task.goalDays);
+      document.getElementById("goalUnit").textContent = "颗";
+      document.getElementById("ringCaption").textContent = "已点亮星星";
+      document.getElementById("rangeText").textContent =
+        `${task.title || "打卡挑战"} · 目标 ${task.goalDays} 颗`;
+      setRing(progress, task.goalDays);
 
       const daysEl = document.getElementById("childDays");
       daysEl.innerHTML = "";
-      slots.forEach((slot) => daysEl.appendChild(buildDayCell(slot, task, "child")));
+      const slots = slotsFor(task);
+      const grid = childSlotGrid(slots.length);
+      daysEl.style.setProperty("--slot-cols", String(grid.cols));
+      daysEl.style.setProperty("--slot-rows", String(grid.rows));
+      slots.forEach((slot) => daysEl.appendChild(buildSlotCell(slot, task, "child")));
 
       if (checkComplete(task)) {
         banner.className = "status-banner win";
-        banner.textContent = `${name}太厉害啦！「${task.title}」连续 ${task.goalDays} 天完成，可以兑换「${task.reward}」喽！`;
+        banner.textContent = `${name}太厉害啦！「${task.title}」攒满 ${task.goalDays} 颗星，可以兑换「${task.reward}」喽！`;
         const b = document.createElement("button");
         b.className = "btn btn-sun";
         b.textContent = "查看奖状";
-        b.onclick = () => showCertificate(true);
+        b.onclick = () => showCertificate(task, true);
         actions.appendChild(b);
       } else if (ready > 0) {
         banner.className = "status-banner";
         banner.textContent = `有 ${ready} 颗星星等你点亮！找到闪闪的格子，亲手点一下吧～`;
       } else {
         banner.className = "status-banner";
-        const left = task.goalDays - streak;
-        banner.textContent = streak === 0
-          ? `过关后家长会打开「可点亮」，${name}就能亲手点亮星星啦～连续 ${task.goalDays} 天可兑奖励哦。`
-          : `${name}已经连续 ${streak} 天啦！再坚持 ${left} 天，星星就集齐咯！`;
+        const left = task.goalDays - progress;
+        banner.textContent = progress === 0
+          ? `家长打开「可点亮」后，${name}就能亲手点亮～攒满 ${task.goalDays} 颗星兑奖励哦。`
+          : `${name}已经点亮 ${progress} 颗星！再攒 ${left} 颗就集齐咯！`;
       }
     }
 
-    function setRing(streak, goal) {
+    function setRing(progress, goal) {
       const fg = document.getElementById("ringFg");
-      const ratio = goal ? Math.min(streak / goal, 1) : 0;
+      const ratio = goal ? Math.min(progress / goal, 1) : 0;
       fg.style.strokeDasharray = String(CIRC);
       if (ratio >= 1) {
         fg.style.strokeDashoffset = "0";
@@ -1362,94 +2835,176 @@
     }
 
     function renderParent() {
-      const task = state.task;
+      if (!document.getElementById("settingsDrawer").classList.contains("hidden")) {
+        document.getElementById("babyName").value = state.profile.nickname || "";
+        document.getElementById("babyName").placeholder = `例如：${NICKNAME_PLACEHOLDER}`;
+      }
+      renderActiveTaskPanel();
+      syncDebugUi();
+      updateHistoryCountBadge();
+      if (!document.getElementById("taskHistoryModal").classList.contains("hidden")) {
+        renderTaskList();
+      }
+    }
+
+    function updateHistoryCountBadge() {
+      const badge = document.getElementById("historyCountBadge");
+      if (!badge) return;
+      const n = state.tasks.length;
+      badge.textContent = n > 0 ? `(${n})` : "";
+    }
+
+    function syncPagePanelScrollLock() {
+      const historyOpen = !document.getElementById("taskHistoryModal").classList.contains("hidden");
+      const settingsOpen = !document.getElementById("settingsDrawer").classList.contains("hidden");
+      document.documentElement.classList.toggle("page-panel-open", historyOpen || settingsOpen);
+    }
+
+    function openTaskHistory() {
+      renderTaskList();
+      document.getElementById("taskHistoryModal").classList.remove("hidden");
+      syncPagePanelScrollLock();
+    }
+    function closeTaskHistory() {
+      document.getElementById("taskHistoryModal").classList.add("hidden");
+      syncPagePanelScrollLock();
+    }
+
+    function openSettings() {
       document.getElementById("babyName").value = state.profile.nickname || "";
       document.getElementById("babyName").placeholder = `例如：${NICKNAME_PLACEHOLDER}`;
+      closeLockEditModal();
+      document.getElementById("settingsDrawer").classList.remove("hidden");
+      syncPagePanelScrollLock();
+    }
+    function closeSettings() {
+      closeLockEditModal();
+      document.getElementById("settingsDrawer").classList.add("hidden");
+      syncPagePanelScrollLock();
+    }
 
-      if (task) {
-        document.getElementById("taskTitle").value = task.title || "";
-        document.getElementById("rewardName").value = task.reward || "";
-        document.getElementById("startDate").value = task.startDate || "";
-        document.getElementById("goalDays").value = task.goalDays || 10;
+    function renderActiveTaskPanel() {
+      const task = activeTask();
+      const empty = document.getElementById("activeTaskEmpty");
+      const panel = document.getElementById("activeTaskPanel");
+      empty.classList.toggle("hidden", !!task);
+      panel.classList.toggle("hidden", !task);
+      if (!task) return;
+
+      document.getElementById("activeTaskName").textContent = task.title || "打卡挑战";
+      const pill = document.getElementById("activeStatusPill");
+      if (task.status === "completed" || checkComplete(task)) {
+        pill.textContent = "已完成";
+        pill.className = "status-pill done";
       } else {
-        document.getElementById("taskTitle").value = "";
-        document.getElementById("rewardName").value = "";
-        document.getElementById("startDate").value = todayStr();
-        document.getElementById("goalDays").value = 10;
+        pill.textContent = "进行中";
+        pill.className = "status-pill";
       }
-      updateRangePreview();
-      renderParentDays();
-    }
 
-    function hideLockEditPanel() {
-      document.getElementById("lockEditPanel").classList.add("hidden");
-      clearCodeBoxes(document.querySelectorAll(".lock-set-digit"));
-    }
+      const progress = mainProgress(task);
+      document.getElementById("activeTaskHint").textContent =
+        `进度 ${progress}/${task.goalDays} 颗。需按顺序打卡；点日期可改这一格。已得星不会自动清零。`;
 
-    function updateRangePreview() {
-      const start = document.getElementById("startDate").value;
-      const days = Number(document.getElementById("goalDays").value || 0);
-      const el = document.getElementById("rangePreview");
-      if (!start || !days) {
-        el.textContent = "选择开始日期和天数后，将自动计算首轮日期范围。";
-        return;
-      }
-      const end = addDays(start, days - 1);
-      el.textContent = `首轮计划：${start}（周${weekday(start)}）→ ${end}（周${weekday(end)}），共 ${days} 天。`;
-    }
+      document.getElementById("editTitle").value = task.title || "";
+      document.getElementById("editReward").value = task.reward || "";
 
-    function renderParentDays() {
+      document.getElementById("checkinHint").textContent =
+        "按顺序点星星：空白→可点亮→已点亮。不能跳过中间格子。标成可点亮时带上今天的日期，之后点日期可改。";
+
       const wrap = document.getElementById("parentDays");
-      const task = state.task;
-      if (!task) {
-        wrap.innerHTML = `<div class="empty"><strong>还没有任务</strong>先填写上方信息并保存</div>`;
+      wrap.innerHTML = "";
+      slotsFor(task).forEach((slot) => wrap.appendChild(buildSlotCell(slot, task, "parent")));
+    }
+
+    function makeToolBtn(text, cls, handler) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = `btn ${cls}`;
+      b.textContent = text;
+      b.onclick = handler;
+      return b;
+    }
+
+    function renderTaskList() {
+      const list = document.getElementById("taskList");
+      if (!list) return;
+      list.innerHTML = "";
+      const tasks = state.tasks.slice().sort((a, b) => {
+        const rank = (t) => (t.id === state.activeTaskId ? 0 : t.status === "completed" ? 1 : t.status === "archived" ? 2 : 3);
+        const r = rank(a) - rank(b);
+        if (r !== 0) return r;
+        return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+      });
+      if (!tasks.length) {
+        list.innerHTML = `<div class="empty"><strong>暂无任务记录</strong>新建一个挑战开始吧</div>`;
         return;
       }
-      wrap.innerHTML = "";
-      currentRoundSlots(task).forEach((slot) => wrap.appendChild(buildDayCell(slot, task, "parent")));
-    }
-
-    async function fillAllReady() {
-      const task = state.task;
-      if (!task) return toast("请先保存任务", "warn");
-      const ok = await askConfirm(`将未点亮的天数都标成「可点亮」，留给宝宝亲手点？`);
-      if (!ok) return;
-      if (!task.marks) task.marks = {};
-      currentRoundSlots(task).forEach((slot) => {
-        if (task.marks[slot.date] !== "ok") task.marks[slot.date] = "ready";
+      tasks.forEach((task) => {
+        const item = document.createElement("div");
+        item.className = "task-item";
+        const isActive = task.id === state.activeTaskId;
+        const statusText = isActive
+          ? (checkComplete(task) ? "当前 · 已完成" : "当前 · 进行中")
+          : (task.status === "completed" ? "已完成" : task.status === "archived" ? "已归档" : "进行中");
+        const pillClass = checkComplete(task) || task.status === "completed"
+          ? "status-pill done"
+          : task.status === "archived"
+            ? "status-pill archived"
+            : "status-pill";
+        const progress = mainProgress(task);
+        item.innerHTML = `
+          <div class="row">
+            <div>
+              <div class="name">${escapeHtml(task.title)}</div>
+              <div class="meta">${progress}/${task.goalDays} 颗 · 目标奖励：${escapeHtml(task.reward || "—")}</div>
+            </div>
+            <span class="${pillClass}">${statusText}</span>
+          </div>
+          <div class="actions"></div>
+        `;
+        const actions = item.querySelector(".actions");
+        if (checkComplete(task) || task.completedAt) {
+          actions.appendChild(makeToolBtn("看奖状", "btn-sun", () => showCertificate(task, false)));
+        }
+        if (isActive) {
+          actions.appendChild(makeToolBtn("归档", "btn-secondary", () => archiveTaskById(task.id)));
+        } else {
+          actions.appendChild(makeToolBtn("删除", "btn-secondary", () => deleteTaskById(task.id)));
+        }
+        list.appendChild(item);
       });
-      save();
-      render();
-      toast("已设为可点亮，去宝宝页点亮吧");
     }
 
-    async function fillAllOk() {
-      const task = state.task;
-      if (!task) return toast("请先保存任务", "warn");
-      const ok = await askConfirm(`将当前这一轮 ${task.goalDays} 天全部直接点亮？`);
-      if (!ok) return;
-      if (!task.marks) task.marks = {};
-      currentRoundSlots(task).forEach((slot) => { task.marks[slot.date] = "ok"; });
-      const justWon = ensureCompleteFlag();
-      save();
-      render();
-      toast("已全部点亮");
-      if (justWon) {
-        burstConfetti();
-        setTimeout(() => showCertificate(true), 350);
-      }
+    function escapeHtml(s) {
+      return String(s || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
     }
 
-    async function clearAllMarks() {
-      const task = state.task;
-      if (!task) return toast("请先保存任务", "warn");
-      const ok = await askConfirm("清除当前任务的全部打卡标记？");
+    async function archiveTaskById(id) {
+      const task = getTask(id);
+      if (!task) return;
+      const ok = await askConfirm("归档后宝宝页将不再显示此任务，记录会留在历史任务里。确定归档？");
       if (!ok) return;
-      task.marks = {};
-      task.completedAt = null;
+      task.status = "archived";
+      if (state.activeTaskId === id) state.activeTaskId = null;
       save();
       render();
-      toast("打卡标记已清除");
+      toast("任务已归档");
+    }
+
+    async function deleteTaskById(id) {
+      const task = getTask(id);
+      if (!task) return;
+      if (task.id === state.activeTaskId) return toast("请先归档当前任务", "warn");
+      const ok = await askConfirm(`确定删除「${task.title}」？删除后无法恢复。`);
+      if (!ok) return;
+      state.tasks = state.tasks.filter((t) => t.id !== id);
+      save();
+      render();
+      toast("任务已删除");
     }
 
     function themeColors() {
@@ -1463,9 +3018,10 @@
       return map[state.theme] || map.blue;
     }
 
-    function showCertificate(withConfetti) {
-      if (!state.task) return;
-      drawCertificate(state.task);
+    function showCertificate(task, withConfetti) {
+      if (!task) return;
+      certTaskId = task.id;
+      drawCertificate(task);
       document.getElementById("certModal").classList.remove("hidden");
       if (withConfetti) burstConfetti();
     }
@@ -1481,6 +3037,7 @@
       const when = task.completedAt ? new Date(task.completedAt) : new Date();
       const title = task.title || "打卡挑战";
       const reward = task.reward || "神秘礼物";
+      const achieveLine = `累计 ${task.goalDays} 颗星达成目标`;
 
       const g = ctx.createLinearGradient(0, 0, w, h);
       g.addColorStop(0, colors.a);
@@ -1534,7 +3091,7 @@
       const bodyTop = 560;
       const bodyH = wrapText(ctx, `完成「${title}」`, w / 2, bodyTop, w - 260, 56);
       ctx.font = `600 40px ${font}`;
-      wrapText(ctx, `连续 ${task.goalDays} 天达成目标`, w / 2, bodyTop + bodyH + 18, w - 260, 58);
+      wrapText(ctx, achieveLine, w / 2, bodyTop + bodyH + 18, w - 260, 58);
 
       const rewardY = 820;
       const badgeW = Math.min(720, w - 280);
@@ -1562,7 +3119,7 @@
 
       ctx.fillStyle = "#8a6a10";
       ctx.font = `600 26px ${font}`;
-      ctx.fillText("✦  获得奖励  ✦", w / 2, rewardY - 22);
+      ctx.fillText("✦  目标奖励  ✦", w / 2, rewardY - 22);
 
       ctx.fillStyle = colors.deep;
       ctx.font = `700 48px ${font}`;
@@ -1703,6 +3260,65 @@
       boxes[0].focus();
     }
 
+    function openLockEditModal() {
+      clearCodeBoxes(document.querySelectorAll(".lock-set-digit"));
+      document.getElementById("lockEditModal").classList.remove("hidden");
+      setTimeout(() => document.querySelector(".lock-set-digit")?.focus(), 50);
+    }
+    function closeLockEditModal() {
+      document.getElementById("lockEditModal").classList.add("hidden");
+      clearCodeBoxes(document.querySelectorAll(".lock-set-digit"));
+    }
+
+    function syncNewTaskPreview() {
+      const days = Math.min(60, Math.max(3, Number(document.getElementById("newGoalDays").value) || 7));
+      document.getElementById("newTaskPreview").textContent =
+        `共 ${days} 颗星。攒满即可兑奖，已得星不会清零。`;
+    }
+
+    function openNewTaskModal() {
+      document.getElementById("newTitle").value = "";
+      document.getElementById("newReward").value = "";
+      document.getElementById("newGoalDays").value = "7";
+      syncNewTaskPreview();
+      document.getElementById("newTaskModal").classList.remove("hidden");
+      setTimeout(() => document.getElementById("newTitle").focus(), 50);
+    }
+    function closeNewTaskModal() {
+      document.getElementById("newTaskModal").classList.add("hidden");
+    }
+
+    async function confirmNewTask() {
+      const existing = activeTask();
+      if (existing) {
+        const ok = await askConfirm("已有进行中的任务。需要先归档当前任务再开启新任务，现在归档并继续？");
+        if (!ok) return;
+        existing.status = "archived";
+        state.activeTaskId = null;
+      }
+
+      const title = document.getElementById("newTitle").value.trim() || "打卡挑战";
+      const reward = document.getElementById("newReward").value.trim() || "心愿奖励";
+      const goalDays = Math.min(60, Math.max(3, Number(document.getElementById("newGoalDays").value) || 7));
+      const id = uid();
+      const task = normalizeTask({
+        id,
+        title,
+        reward,
+        goalDays,
+        stars: ensureStars([], goalDays),
+        status: "active",
+        completedAt: null,
+        createdAt: new Date().toISOString(),
+      });
+      state.tasks.push(task);
+      state.activeTaskId = id;
+      save();
+      closeNewTaskModal();
+      toast("新任务已开启");
+      render();
+    }
+
     document.getElementById("btnChild").onclick = () => {
       if (state.babyMode) return;
       mode = "child";
@@ -1724,28 +3340,42 @@
     });
     bindCodeBoxes(document.querySelectorAll(".lock-set-digit"), { password: true });
 
-    document.getElementById("babyModeSwitch").onclick = async () => {
+    document.getElementById("handoffBaby").onclick = async () => {
       if (state.babyMode) return;
-      const ok = await askConfirm("开启宝宝模式后，将只能看到宝宝页。退出需输入童锁密码，确定开启？");
+      const ok = await askConfirm("打开后只显示宝宝页，退出要输入童锁密码。确定交给宝宝吗？");
       if (!ok) return;
       state.babyMode = true;
       save();
       mode = "child";
-      hideLockEditPanel();
-      toast("宝宝模式已开启");
+      closeSettings();
+      closeTaskHistory();
+      toast("已交给宝宝");
       render();
     };
 
-    document.getElementById("toggleLockEdit").onclick = () => {
-      const panel = document.getElementById("lockEditPanel");
-      const opening = panel.classList.contains("hidden");
-      panel.classList.toggle("hidden", !opening);
-      if (opening) {
-        clearCodeBoxes(document.querySelectorAll(".lock-set-digit"));
-        document.querySelector(".lock-set-digit")?.focus();
-      }
+    document.getElementById("datePopPrev").onclick = () => {
+      if (!popMonth) return;
+      popMonth = new Date(popMonth.getFullYear(), popMonth.getMonth() - 1, 1);
+      renderDatePop();
     };
-    document.getElementById("cancelLockEdit").onclick = hideLockEditPanel;
+    document.getElementById("datePopNext").onclick = () => {
+      if (!popMonth) return;
+      popMonth = new Date(popMonth.getFullYear(), popMonth.getMonth() + 1, 1);
+      renderDatePop();
+    };
+    document.getElementById("datePopToday").onclick = () => applySlotDate(todayStr());
+    document.addEventListener("pointerdown", (e) => {
+      const pop = document.getElementById("datePop");
+      if (!pop || pop.classList.contains("hidden")) return;
+      if (pop.contains(e.target) || e.target.closest(".day-date")) return;
+      closeDatePop();
+    });
+
+    document.getElementById("toggleLockEdit").onclick = openLockEditModal;
+    document.getElementById("cancelLockEdit").onclick = closeLockEditModal;
+    document.getElementById("lockEditModal").addEventListener("click", (e) => {
+      if (e.target.id === "lockEditModal") closeLockEditModal();
+    });
 
     document.getElementById("themeGrid").onclick = (e) => {
       const chip = e.target.closest(".theme-chip");
@@ -1764,40 +3394,15 @@
       render();
     };
 
-    document.getElementById("startDate").addEventListener("change", updateRangePreview);
-    document.getElementById("goalDays").addEventListener("input", updateRangePreview);
-
-    document.getElementById("saveTask").onclick = () => {
-      const title = document.getElementById("taskTitle").value.trim() || "打卡挑战";
-      const reward = document.getElementById("rewardName").value.trim() || "心愿奖励";
-      const startDate = document.getElementById("startDate").value || todayStr();
-      const goalDays = Math.min(60, Math.max(3, Number(document.getElementById("goalDays").value) || 10));
-      const keepMarks = state.task && state.task.startDate === startDate ? (state.task.marks || {}) : {};
-      state.task = { title, reward, startDate, goalDays, marks: keepMarks, completedAt: null };
-      ensureCompleteFlag();
-      save();
-      toast("任务已保存");
-      render();
-    };
-
-    document.getElementById("clearTask").onclick = async () => {
-      if (!state.task) return toast("当前没有任务", "warn");
-      const ok = await askConfirm("确定清空当前任务与打卡记录？昵称、皮肤和童锁不会受影响。");
-      if (!ok) return;
-      state.task = null;
-      save();
-      render();
-      toast("任务已清空");
-    };
-
     document.getElementById("resetProfile").onclick = async () => {
-      const ok = await askConfirm("确定恢复默认设置？将清空昵称，并把皮肤恢复为蓝色。任务与打卡不会受影响。");
+      const ok = await askConfirm("确定恢复默认？将清空昵称，并把皮肤恢复为蓝色。任务与打卡不会受影响。");
       if (!ok) return;
       state.profile = { nickname: "" };
       applyTheme("blue");
       save();
+      document.getElementById("babyName").value = "";
       render();
-      toast("已恢复默认设置");
+      toast("已恢复默认");
     };
 
     document.getElementById("saveLock").onclick = () => {
@@ -1805,9 +3410,39 @@
       if (!/^\d{4}$/.test(v)) return toast("请输入完整的 4 位数字", "warn");
       state.lockCode = v;
       save();
-      hideLockEditPanel();
+      closeLockEditModal();
       toast("童锁密码已更新");
     };
+
+    document.getElementById("saveTaskMeta").onclick = () => {
+      const task = activeTask();
+      if (!task) return;
+      task.title = document.getElementById("editTitle").value.trim() || "打卡挑战";
+      task.reward = document.getElementById("editReward").value.trim() || "心愿奖励";
+      save();
+      toast("任务信息已保存");
+      render();
+    };
+
+    document.getElementById("archiveTask").onclick = () => {
+      const task = activeTask();
+      if (!task) return;
+      archiveTaskById(task.id);
+    };
+
+    document.getElementById("openNewTask").onclick = openNewTaskModal;
+    document.getElementById("openTaskHistory").onclick = openTaskHistory;
+    document.getElementById("closeTaskHistory").onclick = closeTaskHistory;
+    document.getElementById("backTaskHistory").onclick = closeTaskHistory;
+    document.getElementById("openSettings").onclick = openSettings;
+    document.getElementById("closeSettings").onclick = closeSettings;
+    document.getElementById("backSettings").onclick = closeSettings;
+    document.getElementById("cancelNewTask").onclick = closeNewTaskModal;
+    document.getElementById("confirmNewTask").onclick = confirmNewTask;
+    document.getElementById("newTaskModal").addEventListener("click", (e) => {
+      if (e.target.id === "newTaskModal") closeNewTaskModal();
+    });
+    document.getElementById("newGoalDays").addEventListener("input", syncNewTaskPreview);
 
     document.getElementById("askCancel").onclick = () => closeAsk(false);
     document.getElementById("askOk").onclick = () => closeAsk(true);
@@ -1815,12 +3450,51 @@
       if (e.target.id === "askMask") closeAsk(false);
     });
 
-    document.getElementById("fillAllReady").onclick = fillAllReady;
-    document.getElementById("fillAllOk").onclick = fillAllOk;
-    document.getElementById("clearAllMarks").onclick = clearAllMarks;
     document.getElementById("previewCert").onclick = () => {
-      if (!state.task) return toast("请先保存任务", "warn");
-      showCertificate(false);
+      const task = activeTask();
+      if (!task) return toast("请先开启任务", "warn");
+      showCertificate(task, false);
+    };
+    document.getElementById("previewStarFx").onclick = () => {
+      const name = babyName();
+      playStarCelebration(`${name}点亮了一颗星！`);
+    };
+    document.getElementById("previewSuperStarFx").onclick = () => {
+      const name = babyName();
+      playStarCelebration(`${name}集齐星星啦！`, null, { mascot: true });
+    };
+    document.getElementById("debugSwitch").onclick = () => {
+      setDebugMode(!debugSession.on);
+    };
+    document.getElementById("debugFill").onclick = async () => {
+      if (!debugSession.on) return toast("请先打开调试模式", "warn");
+      const task = activeTask();
+      if (!task) return toast("请先开启任务", "warn");
+      const ok = await askConfirm("一键打满当前任务？这是调试操作，用来看完成效果。");
+      if (!ok) return;
+      task.stars = ensureStars(task.stars, task.goalDays);
+      task.stars.forEach((star, i) => {
+        star.status = "ok";
+        if (!star.date) star.date = addDays(todayStr(), i - (task.goalDays - 1));
+      });
+      const justWon = ensureCompleteFlag(task);
+      save();
+      render();
+      toast("已打满，可预览奖状");
+      if (justWon) burstConfetti();
+    };
+    document.getElementById("debugClear").onclick = async () => {
+      if (!debugSession.on) return toast("请先打开调试模式", "warn");
+      const task = activeTask();
+      if (!task) return toast("请先开启任务", "warn");
+      const ok = await askConfirm("清空当前任务的全部打卡？已点亮的星星也会去掉。");
+      if (!ok) return;
+      task.stars = ensureStars([], task.goalDays);
+      task.completedAt = null;
+      if (task.status === "completed") task.status = "active";
+      save();
+      render();
+      toast("打卡已清空");
     };
     document.getElementById("closeCert").onclick = () => {
       document.getElementById("certModal").classList.add("hidden");
@@ -1833,9 +3507,9 @@
     };
 
     applyTheme(state.theme);
+    document.getElementById("askMask").classList.add("hidden");
     render();
 
-    // 预热点亮动效层，降低首次点击被动画跳过的概率
     (function warmStarCeleb() {
       const overlay = document.getElementById("starCeleb");
       if (!overlay) return;
