@@ -1075,6 +1075,9 @@
       align-content: stretch;
       justify-items: stretch;
       gap: 10px;
+      /* 给可点亮外圈光晕 / 微缩放留出空间，避免被 overflow 裁切 */
+      padding: 5px;
+      box-sizing: border-box;
     }
     #childView .day {
       aspect-ratio: auto;
@@ -1085,6 +1088,10 @@
       gap: 0;
       justify-content: center;
       border-radius: 18px;
+    }
+    /* 抬高层级，避免相邻卡槽盖住可点亮描边 */
+    #childView .day.ready {
+      z-index: 2;
     }
     #childView .day .day-hit {
       flex: 0 0 auto;
@@ -1344,9 +1351,18 @@
       0%, 100% { filter: drop-shadow(0 0 4px rgba(255, 210, 0, 0.9)) drop-shadow(0 0 10px rgba(255, 196, 0, 0.7)); }
       50% { filter: drop-shadow(0 0 8px rgba(255, 230, 120, 1)) drop-shadow(0 0 16px rgba(255, 200, 0, 0.95)); }
     }
+    /* 用光晕强弱呼吸，避免 scale 顶到相邻卡槽 / 被 overflow 裁切 */
     @keyframes ready-pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.03); }
+      0%, 100% {
+        box-shadow:
+          0 0 0 3px color-mix(in srgb, var(--primary) 24%, transparent),
+          0 6px 14px color-mix(in srgb, var(--primary) 14%, transparent);
+      }
+      50% {
+        box-shadow:
+          0 0 0 3px color-mix(in srgb, var(--primary) 48%, transparent),
+          0 10px 22px color-mix(in srgb, var(--primary) 30%, transparent);
+      }
     }
     @keyframes ready-twinkle {
       0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.85; }
