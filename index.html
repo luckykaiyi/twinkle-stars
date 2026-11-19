@@ -623,36 +623,6 @@
       min-height: 0;
     }
     .ring-caption { color: var(--muted); font-size: var(--fs-sm); font-weight: 500; }
-    .side-stat {
-      margin-top: 6px; text-align: center;
-      color: var(--muted); font-size: var(--fs-xs); font-weight: 500; line-height: 1.4;
-      min-height: 1.2em;
-    }
-    .mode-badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 3px 10px; border-radius: 999px;
-      background: color-mix(in srgb, var(--primary) 14%, white);
-      color: var(--primary-deep); font-size: var(--fs-xs); font-weight: 700;
-    }
-    .mode-badge.lucky {
-      background: linear-gradient(120deg, #fff3c4, #ffe08a);
-      color: #8a6a10;
-    }
-    .choice-row {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;
-    }
-    .choice-chip {
-      border: 2px solid var(--line); border-radius: 14px; padding: 12px 10px;
-      background: #fff; cursor: pointer; text-align: left;
-      font-family: inherit; color: var(--ink);
-    }
-    .choice-chip strong { display: block; font-size: var(--fs-sm); margin-bottom: 4px; }
-    .choice-chip span { display: block; font-size: var(--fs-xs); color: var(--muted); line-height: 1.4; font-weight: 500; }
-    .choice-chip.active {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent);
-      background: color-mix(in srgb, var(--primary) 8%, white);
-    }
     .task-summary {
       display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
       margin-bottom: 12px;
@@ -684,7 +654,6 @@
     }
     @media (max-width: 520px) {
       .inline-fields { grid-template-columns: 1fr; }
-      .choice-row { grid-template-columns: 1fr; }
     }
     .modal.wide { width: min(440px, 100%); text-align: left; }
     .modal.wide h3 { text-align: center; }
@@ -826,9 +795,16 @@
       padding: 2px 2px 8px;
       scrollbar-width: thin;
     }
+    /* 全屏面板（设置 / 历史）：保留滚动，隐藏滚动条 */
     .page-mask .drawer-body {
-      /* 内容未溢出时不强制占滚动槽 */
+      scrollbar-width: none;
+      -ms-overflow-style: none;
       scrollbar-gutter: auto;
+    }
+    .page-mask .drawer-body::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+      display: none;
     }
     .drawer-body .task-list { gap: 12px; }
     .drawer-foot {
@@ -958,30 +934,6 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 18px;
       }
-    }
-    .status-banner.lucky {
-      background: linear-gradient(120deg, #fff6d0, color-mix(in srgb, var(--primary) 16%, white));
-      color: #8a6a10; font-weight: 700;
-    }
-    .surprise-egg {
-      display: inline-flex; align-items: center; gap: 10px;
-      margin-top: 12px; padding: 10px 14px 10px 10px;
-      border: 0; border-radius: 999px; cursor: pointer;
-      background: linear-gradient(120deg, #fff8d6, #ffe89a);
-      box-shadow: 0 8px 20px rgba(255, 196, 0, 0.35);
-      color: #8a6a10; font-weight: 700; font-size: var(--fs-sm);
-      font-family: inherit; line-height: 1.2;
-      animation: egg-bounce 1.8s ease-in-out infinite;
-    }
-    .surprise-egg img {
-      width: 42px; height: 42px; border-radius: 50%;
-      display: block; background: #dff0ff;
-      box-shadow: 0 0 0 3px rgba(255,255,255,0.9);
-    }
-    .surprise-egg:active { transform: scale(0.96); animation: none; }
-    @keyframes egg-bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
     }
     .gift-show { display: none; position: relative; z-index: 2; width: 100%; height: 100%; }
     .star-celeb.mascot .big-star { display: none !important; }
@@ -1294,10 +1246,12 @@
       display: grid !important;
       opacity: 0;
       visibility: hidden;
+      pointer-events: none;
     }
     .star-celeb.show {
       opacity: 1;
       visibility: visible;
+      pointer-events: auto;
     }
     .star-celeb .stage {
       position: relative; width: min(78vw, 340px); height: min(78vw, 340px);
@@ -1422,6 +1376,10 @@
       color: #fff; box-shadow: 0 8px 18px color-mix(in srgb, var(--primary) 35%, transparent);
     }
     .btn-secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+    .btn-danger {
+      background: #fff; color: #c23b5a;
+      border: 1px solid color-mix(in srgb, #c23b5a 40%, var(--line));
+    }
     .btn-sun {
       background: linear-gradient(180deg, #ffe99a, #ffd95c); color: #6a5208;
       box-shadow: 0 6px 14px rgba(255, 217, 92, 0.35);
@@ -1749,12 +1707,11 @@
             <div class="center">
               <div>
                 <strong id="progressNum">0</strong>
-                <span>/ <span id="goalNum">7</span> <span id="goalUnit">颗</span></span>
+                <span>/ <span id="goalNum">—</span> <span id="goalUnit">颗</span></span>
               </div>
             </div>
           </div>
           <div class="ring-caption" id="ringCaption">已点亮星星</div>
-          <div class="side-stat" id="sideStat"></div>
         </div>
       </div>
       <div class="card stars-panel">
@@ -1916,7 +1873,7 @@
         <span aria-hidden="true"></span>
       </div>
       <div class="drawer-head">
-        <p class="hint">昵称、皮肤与童锁。交给宝宝的按钮在页面顶部。</p>
+        <p class="hint">昵称、皮肤、童锁与本地数据。交给宝宝的按钮在页面顶部。</p>
       </div>
       <div class="drawer-body">
         <div class="drawer-section">
@@ -1939,9 +1896,16 @@
         </div>
         <div class="drawer-section">
           <strong class="drawer-section-title">安全</strong>
-          <p class="hint">默认童锁为 1234。建议改成自己记得的密码，再给宝宝玩。</p>
+          <p class="hint">童锁用于防误触，不是加密。默认 1234，建议改成自己记得的密码后再「交给宝宝」。</p>
           <div class="btn-row" style="margin-top:0;">
             <button type="button" class="btn btn-secondary" id="toggleLockEdit">修改童锁密码</button>
+          </div>
+        </div>
+        <div class="drawer-section">
+          <strong class="drawer-section-title">数据</strong>
+          <p class="hint">进度只保存在本机浏览器。清空后任务、打卡、昵称与童锁都会恢复为初始状态，不可撤销。</p>
+          <div class="btn-row" style="margin-top:0;">
+            <button type="button" class="btn btn-danger" id="clearAllData">清空全部数据</button>
           </div>
         </div>
       </div>
@@ -1984,7 +1948,7 @@
         <button type="button" class="btn btn-primary" id="saveCert">保存奖状</button>
         <button type="button" class="btn btn-secondary" id="closeCert">关闭</button>
       </div>
-      <p class="hint cert-hint">保存后可在系统相册中查看；也可长按奖状图片保存。</p>
+      <p class="hint cert-hint">点击「保存奖状」，按提示存入相册或下载到本地。</p>
     </div>
   </div>
 
@@ -2051,8 +2015,10 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "twinkle-stars-v1";
-    const DEBUG_KEY = "twinkle-stars-debug-v1";
+    // v2 与旧版 v1 键隔离：互不读写，避免旧结构干扰；回退旧版 HTML 时 v1 数据仍在
+    const STORAGE_KEY = "twinkle-stars-v2";
+    const DEBUG_KEY = "twinkle-stars-debug-v2";
+    const LEGACY_KEYS = ["twinkle-stars-v1", "twinkle-stars-debug-v1"];
     const CIRC = 2 * Math.PI * 52;
     const THEMES = ["blue", "pink", "green", "yellow", "purple"];
     const FALLBACK_NAME = "宝宝";
@@ -2068,88 +2034,44 @@
       activeTaskId: null,
     });
 
+    let storageNotice = null;
     let state = load();
     let mode = "child";
     let certTaskId = null;
     let debugSession = loadDebugSession();
-    // 若从旧版单任务结构迁移而来，立刻落盘，避免刷新又读到旧数据
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed.task && !Array.isArray(parsed.tasks)) save();
-        else if (Array.isArray(parsed.tasks) && parsed.task) {
-          delete state.task;
-          save();
-        }
-      }
-    } catch (_) {}
 
     function uid() {
       return `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
     }
 
     function migrate(parsed) {
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error("invalid state");
+      }
+      const lockDigits = String(parsed.lockCode || "").replace(/\D/g, "").slice(0, 4);
       const base = {
         ...defaultState(),
-        lockCode: parsed.lockCode || DEFAULT_LOCK_CODE,
+        lockCode: /^\d{4}$/.test(lockDigits) ? lockDigits : DEFAULT_LOCK_CODE,
         babyMode: !!parsed.babyMode,
         theme: THEMES.includes(parsed.theme) ? parsed.theme : "blue",
         profile: { nickname: ((parsed.profile && parsed.profile.nickname) || "").trim() },
       };
 
-      if (Array.isArray(parsed.tasks)) {
-        base.tasks = parsed.tasks.map(normalizeTask).filter(Boolean);
-        base.activeTaskId = parsed.activeTaskId || null;
-        if (base.activeTaskId && !base.tasks.some((t) => t.id === base.activeTaskId)) {
-          base.activeTaskId = null;
-        }
-        if (!base.activeTaskId) {
-          const active = base.tasks.find((t) => t.status === "active");
-          if (active) base.activeTaskId = active.id;
-        }
-        return base;
-      }
+      // 仅接受当前多任务结构；无法识别则视为空数据（不迁旧版单任务 / streak）
+      if (!Array.isArray(parsed.tasks)) return base;
 
-      // v1 single task / 旧连续模式 → 累计星槽
-      if (parsed.task) {
-        const t = parsed.task;
-        const id = uid();
-        const migrated = normalizeTask({
-          id,
-          title: t.title || "打卡挑战",
-          reward: t.reward || "心愿奖励",
-          goalDays: t.goalDays || 7,
-          startDate: t.startDate || todayStr(),
-          marks: t.marks || {},
-          stars: null,
-          status: t.completedAt ? "completed" : "active",
-          completedAt: t.completedAt || null,
-          createdAt: new Date().toISOString(),
-        });
-        base.tasks = [migrated];
-        base.activeTaskId = migrated.status === "active" ? id : null;
+      base.tasks = parsed.tasks.map(normalizeTask).filter(Boolean);
+      let activeId = parsed.activeTaskId || null;
+      const activeTask = activeId ? base.tasks.find((t) => t.id === activeId) : null;
+      if (!activeTask || activeTask.status === "archived") {
+        activeId = null;
       }
+      if (!activeId) {
+        const live = base.tasks.find((t) => t.status === "active" || t.status === "completed");
+        if (live) activeId = live.id;
+      }
+      base.activeTaskId = activeId;
       return base;
-    }
-
-    function starsFromLegacy(raw, goalDays) {
-      if (Array.isArray(raw.stars) && raw.mode !== "streak") {
-        return ensureStars(raw.stars, goalDays);
-      }
-      if (raw.marks && typeof raw.marks === "object") {
-        const start = raw.startDate || todayStr();
-        const list = [];
-        for (let i = 0; i < goalDays; i++) {
-          const d = addDays(start, i);
-          const m = raw.marks[d];
-          if (m === "ok") list.push({ status: "ok", date: d });
-          else if (m === "ready") list.push({ status: "ready", date: d });
-          else list.push({ status: "empty", date: null });
-        }
-        return ensureStars(list, goalDays);
-      }
-      return ensureStars(raw.stars, goalDays);
     }
 
     function normalizeTask(raw) {
@@ -2161,7 +2083,7 @@
         reward: (raw.reward || "心愿奖励").trim() || "心愿奖励",
         mode: "accumulate",
         goalDays,
-        stars: starsFromLegacy(raw, goalDays),
+        stars: ensureStars(raw.stars, goalDays),
         status: raw.status === "completed" || raw.status === "archived" ? raw.status : "active",
         completedAt: raw.completedAt || null,
         createdAt: raw.createdAt || new Date().toISOString(),
@@ -2191,10 +2113,20 @@
         if (!raw) return defaultState();
         return migrate(JSON.parse(raw));
       } catch {
+        try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+        storageNotice = "本地数据无法读取，已重置为空白状态";
         return defaultState();
       }
     }
-    function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        return true;
+      } catch {
+        toast("保存失败：浏览器可能禁止本地存储或空间已满", "err");
+        return false;
+      }
+    }
 
     function loadDebugSession() {
       try {
@@ -2206,21 +2138,39 @@
           backup: parsed.backup && typeof parsed.backup === "object" ? parsed.backup : null,
         };
       } catch {
+        try { localStorage.removeItem(DEBUG_KEY); } catch (_) {}
         return { on: false, backup: null };
       }
     }
     function saveDebugSession() {
-      localStorage.setItem(DEBUG_KEY, JSON.stringify({
-        on: !!debugSession.on,
-        backup: debugSession.backup || null,
-      }));
+      try {
+        localStorage.setItem(DEBUG_KEY, JSON.stringify({
+          on: !!debugSession.on,
+          backup: debugSession.backup || null,
+        }));
+        return true;
+      } catch {
+        toast("调试备份保存失败", "err");
+        return false;
+      }
+    }
+
+    function clearLocalStorageKeys() {
+      [STORAGE_KEY, DEBUG_KEY, ...LEGACY_KEYS].forEach((key) => {
+        try { localStorage.removeItem(key); } catch (_) {}
+      });
     }
     function cloneStateSnapshot() {
       return JSON.parse(JSON.stringify(state));
     }
     function restoreStateFromBackup(backup) {
       if (!backup || typeof backup !== "object") return false;
-      state = migrate(backup);
+      try {
+        state = migrate(backup);
+      } catch {
+        toast("备份数据无效，未能恢复", "err");
+        return false;
+      }
       save();
       return true;
     }
@@ -2760,14 +2710,12 @@
       const name = babyName();
       const banner = document.getElementById("childBanner");
       const actions = document.getElementById("childActions");
-      const sideStat = document.getElementById("sideStat");
       actions.innerHTML = "";
-      sideStat.textContent = "";
 
       if (!task) {
         document.getElementById("childReward").textContent = "还没有任务";
         document.getElementById("progressNum").textContent = "0";
-        document.getElementById("goalNum").textContent = "10";
+        document.getElementById("goalNum").textContent = "—";
         document.getElementById("goalUnit").textContent = "颗";
         document.getElementById("ringCaption").textContent = "已点亮星星";
         document.getElementById("rangeText").textContent = "";
@@ -2776,7 +2724,7 @@
         emptyDays.style.removeProperty("--slot-rows");
         emptyDays.innerHTML =
           `<div class="empty"><strong>星星还在睡觉</strong>请先在家长页发布任务</div>`;
-        setRing(0, 7);
+        setRing(0, 0);
         banner.className = "status-banner warn";
         banner.textContent = `先切换到「家长」发布任务，再回来看${name}的进度哦。`;
         return;
@@ -3405,6 +3353,27 @@
       toast("已恢复默认");
     };
 
+    document.getElementById("clearAllData").onclick = async () => {
+      const ok = await askConfirm("清空本机全部数据？任务、打卡、昵称、童锁都会恢复为初始状态，且不可撤销。");
+      if (!ok) return;
+      clearLocalStorageKeys();
+      state = defaultState();
+      debugSession = { on: false, backup: null };
+      mode = "child";
+      certTaskId = null;
+      applyTheme("blue");
+      document.getElementById("babyName").value = "";
+      save();
+      saveDebugSession();
+      closeSettings();
+      closeLockEditModal();
+      closeTaskHistory();
+      document.getElementById("certModal").classList.add("hidden");
+      document.getElementById("askMask").classList.add("hidden");
+      render();
+      toast("已清空并恢复默认");
+    };
+
     document.getElementById("saveLock").onclick = () => {
       const v = codeDigits(document.querySelectorAll(".lock-set-digit"));
       if (!/^\d{4}$/.test(v)) return toast("请输入完整的 4 位数字", "warn");
@@ -3500,15 +3469,61 @@
       document.getElementById("certModal").classList.add("hidden");
     };
     document.getElementById("saveCert").onclick = () => {
-      const a = document.createElement("a");
-      a.href = document.getElementById("certCanvas").toDataURL("image/png");
-      a.download = `打卡奖状-${babyName()}-${todayStr()}.png`;
-      a.click();
+      saveCertificateImage();
     };
+
+    function saveCertificateImage() {
+      const canvas = document.getElementById("certCanvas");
+      const filename = `打卡奖状-${babyName()}-${todayStr()}.png`;
+      if (!canvas || typeof canvas.toBlob !== "function") {
+        toast("当前环境无法保存奖状", "err");
+        return;
+      }
+      const downloadBlob = (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.rel = "noopener";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2500);
+        toast("已开始下载");
+      };
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          toast("生成奖状失败", "err");
+          return;
+        }
+        try {
+          if (typeof File !== "undefined" && navigator.canShare) {
+            const file = new File([blob], filename, { type: "image/png" });
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({ files: [file], title: "打卡奖状" });
+              toast("请在分享菜单中选择「存储到照片」");
+              return;
+            }
+          }
+        } catch (err) {
+          if (err && err.name === "AbortError") return;
+        }
+        try {
+          downloadBlob(blob);
+        } catch {
+          toast("保存失败，请重试", "err");
+        }
+      }, "image/png");
+    }
 
     applyTheme(state.theme);
     document.getElementById("askMask").classList.add("hidden");
     render();
+    if (storageNotice) {
+      toast(storageNotice, "warn");
+      storageNotice = null;
+    }
 
     (function warmStarCeleb() {
       const overlay = document.getElementById("starCeleb");
